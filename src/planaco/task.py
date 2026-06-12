@@ -45,7 +45,7 @@ Example
 
 >>> # Modern style: use a Distribution object
 >>> from planaco import PERTDistribution
->>> dist = PERTDistribution(minimum=5, mode=8, maximum=15)
+>>> dist = PERTDistribution(min_value=5, mode_value=8, max_value=15)
 >>> task = Task(name="Development", distribution=dist)
 
 See Also
@@ -78,8 +78,6 @@ class Task:
     ----------
     task_id : str
         Unique identifier (UUID) for the task.
-    cdate : datetime
-        Creation timestamp.
     name : str or None
         Human-readable name for the task.
 

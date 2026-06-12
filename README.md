@@ -182,10 +182,10 @@ The cumulative distribution shows the probability of completing the project with
 
 ```python
 # Export to JSON
-project.export_results(n=10000, format='json', filename='results.json')
+project.export_results(n=10000, format='json', output='results.json')
 
 # Export to CSV
-project.export_results(n=10000, format='csv', filename='results.csv')
+project.export_results(n=10000, format='csv', output='results.csv')
 ```
 
 ### Probability Distributions
@@ -331,20 +331,20 @@ project:
   seed: 42  # optional, for reproducible runs
 
 tasks:
-  - name: Design
-    distribution:
-      type: pert
-      minimum: 5
-      mode: 7
-      maximum: 14
+  design:
+    name: Design
+    estimator: pert
+    min_duration: 5
+    mode_duration: 7
+    max_duration: 14
 
-  - name: Development
-    depends_on: [Design]
-    distribution:
-      type: triangular
-      minimum: 10
-      mode: 15
-      maximum: 25
+  development:
+    name: Development
+    estimator: triangular
+    min_duration: 10
+    mode_duration: 15
+    max_duration: 25
+    depends_on: [design]
 ```
 
 Run `planaco --help` or `planaco <command> --help` to see all available options, including `--seed` for reproducible results and `-p/--percentile` markers for plots.

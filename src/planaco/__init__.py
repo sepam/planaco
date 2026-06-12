@@ -72,7 +72,7 @@ Using Distribution Objects
 >>> from planaco import Task, PERTDistribution
 >>>
 >>> # Use PERT distribution for smoother estimates
->>> dist = PERTDistribution(minimum=5, mode=7, maximum=14)
+>>> dist = PERTDistribution(min_value=5, mode_value=7, max_value=14)
 >>> task = Task(name="Design", distribution=dist)
 
 Configuration Files
@@ -87,20 +87,21 @@ Example YAML::
       unit: "days"
 
     tasks:
-      - name: "Design"
-        distribution:
-          type: "pert"
-          minimum: 5
-          mode: 7
-          maximum: 14
+      design:
+        name: "Design"
+        estimator: "pert"
+        min_duration: 5
+        mode_duration: 7
+        max_duration: 14
 
-      - name: "Development"
-        depends_on: ["Design"]
-        distribution:
-          type: "triangular"
-          minimum: 10
-          mode: 15
-          maximum: 25
+      development:
+        name: "Development"
+        estimator: "triangular"
+        min_duration: 10
+        mode_duration: 15
+        max_duration: 25
+        depends_on:
+          - design
 
 Command Line Interface
 ----------------------
