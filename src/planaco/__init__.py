@@ -120,10 +120,6 @@ planaco.task : Task class for individual tasks.
 planaco.project : Project class for task collections.
 planaco.config : YAML configuration loading.
 planaco.cli : Command-line interface.
-
-Version
--------
-0.2.2
 """
 
 # Import order matters: distributions -> task -> project to avoid circular imports

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planaco"
-version = "0.2.2"
+dynamic = ["version"]
 description = "Task and project estimation using Monte Carlo simulation"
 readme = "README.md"
 license = {text = "MIT"}
@@ -62,6 +62,9 @@ Repository = "https://github.com/sepam/planaco"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "planaco.__version__"}
 
 [tool.mypy]
 python_version = "3.9"

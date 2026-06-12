@@ -47,6 +47,5 @@ ENV/
 env.bak/
 venv.bak/
 
-# Planning
-ROADMAP.md
-/CI_CD_IMPLEMENTATION.md
+# Internal planning docs (kept local, not published)
+docs/internal/
