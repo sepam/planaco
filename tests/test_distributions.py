@@ -726,7 +726,9 @@ class TestDistributionRoundTrip:
 
     def test_normal_round_trip_with_bounds(self):
         """Normal distribution with explicit bounds survives round-trip."""
-        original = NormalDistribution(mean=7.0, std_dev=2.0, min_value=3.0, max_value=11.0)
+        original = NormalDistribution(
+            mean=7.0, std_dev=2.0, min_value=3.0, max_value=11.0
+        )
         d = original.to_dict()
         restored = create_distribution(estimator=d.pop("type"), **d)
         assert isinstance(restored, NormalDistribution)
@@ -772,7 +774,9 @@ class TestDistributionRoundTrip:
 
     def test_lognormal_round_trip_with_bounds(self):
         """LogNormal with explicit bounds survives round-trip."""
-        original = LogNormalDistribution(mean=8.0, std_dev=3.0, min_value=2.0, max_value=20.0)
+        original = LogNormalDistribution(
+            mean=8.0, std_dev=3.0, min_value=2.0, max_value=20.0
+        )
         d = original.to_dict()
         restored = create_distribution(estimator=d.pop("type"), **d)
         assert isinstance(restored, LogNormalDistribution)

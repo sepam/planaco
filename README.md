@@ -6,6 +6,7 @@
 
   **Probabilistic Project Planning with Monte Carlo Simulation**
 
+  [![CI](https://img.shields.io/github/actions/workflow/status/sepam/planaco/ci.yml?branch=master&style=flat-square&label=CI)](https://github.com/sepam/planaco/actions/workflows/ci.yml)
   [![PyPI version](https://img.shields.io/pypi/v/planaco.svg?style=flat-square)](https://pypi.org/project/planaco/)
   [![Python versions](https://img.shields.io/pypi/pyversions/planaco.svg?style=flat-square)](https://pypi.org/project/planaco/)
   [![License](https://img.shields.io/github/license/sepam/planaco?style=flat-square)](LICENSE.md)

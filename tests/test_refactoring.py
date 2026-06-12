@@ -254,7 +254,9 @@ class TestExportResultsEfficiency:
             call_count += 1
             return original_estimate()
 
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=True) as tmp:  # noqa: SIM117
+        with tempfile.NamedTemporaryFile(  # noqa: SIM117
+            suffix=".json", delete=True
+        ) as tmp:
             with patch.object(p, "estimate", side_effect=counting_estimate):
                 p.export_results(n=n, format="json", output=tmp.name)
 

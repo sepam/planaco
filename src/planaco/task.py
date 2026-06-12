@@ -231,7 +231,7 @@ class Task:
         """
         if self._distribution is not None:
             if hasattr(self._distribution, "min_value"):
-                return self._distribution.min_value
+                return float(self._distribution.min_value)
         return self._min_duration
 
     @property
@@ -252,7 +252,7 @@ class Task:
         """
         if self._distribution is not None:
             if hasattr(self._distribution, "mode_value"):
-                return self._distribution.mode_value
+                return float(self._distribution.mode_value)
         return self._mode_duration
 
     @property
@@ -273,7 +273,7 @@ class Task:
         """
         if self._distribution is not None:
             if hasattr(self._distribution, "max_value"):
-                return self._distribution.max_value
+                return float(self._distribution.max_value)
         return self._max_duration
 
     def estimate(self) -> float:

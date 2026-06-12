@@ -74,7 +74,6 @@ import seaborn as sns
 from planaco.task import Task
 
 
-
 class Project:
     """A collection of tasks with optional dependencies for Monte Carlo simulation.
 
@@ -114,7 +113,6 @@ class Project:
     >>> stats = project.statistics(n=10000)
     >>> print(f"P85: {stats['percentiles']['p85']:.1f} {stats['unit']}")
     """
-
 
     def __init__(self, name: Optional[str] = None, unit: str = "days") -> None:
         """Initialize a new Project.
@@ -843,7 +841,7 @@ class Project:
             if show_percentiles:
                 colors = ["red", "orange", "purple", "green", "blue"]
                 for i, p in enumerate(percentiles):
-                    p_value = np.percentile(sims, p)
+                    p_value = float(np.percentile(sims, p))
                     color = colors[i % len(colors)]
                     ax.axvline(
                         x=p_value,
@@ -861,8 +859,9 @@ class Project:
                     )
             else:
                 # Default: show only median
-                ax.axvline(x=np.median(sims), color="red", label="50%")
-                ax.text(np.median(sims) - 0.5, ax.get_ylim()[0], "50%", color="red")
+                median = float(np.median(sims))
+                ax.axvline(x=median, color="red", label="50%")
+                ax.text(median - 0.5, ax.get_ylim()[0], "50%", color="red")
 
             ax.legend()
 
