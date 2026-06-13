@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
+from planaco import __version__
 from planaco.cli import main
 
 # Get path to fixtures directory
@@ -43,7 +44,7 @@ class TestMainGroup:
         """Test --version flag."""
         result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert "0.2.2" in result.output
+        assert __version__ in result.output
 
 
 class TestInitCommand:

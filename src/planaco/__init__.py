@@ -135,7 +135,7 @@ from planaco.distributions import (
 from planaco.task import Task
 from planaco.project import Project
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 __all__ = [
     # Core classes
