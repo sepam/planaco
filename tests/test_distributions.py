@@ -807,3 +807,90 @@ class TestDistributionRoundTrip:
         restored_samples = [restored.sample() for _ in range(50)]
 
         assert original_samples == restored_samples
+
+
+class TestDistributionAbstractBase:
+    """Cover the abstract base method bodies via a concrete subclass.
+
+    The ``pass`` bodies of the abstract methods are never executed when a
+    concrete distribution overrides them, so we explicitly invoke them via
+    ``super()`` to confirm they exist and are inert.
+    """
+
+    def test_abstract_method_bodies(self):
+        from planaco.distributions import Distribution
+
+        class _Concrete(Distribution):
+            @property
+            def name(self) -> str:
+                return super().name
+
+            def sample(self) -> float:
+                return super().sample()
+
+            def validate(self) -> None:
+                return super().validate()
+
+            def get_display_params(self) -> str:
+                return super().get_display_params()
+
+            def to_dict(self):
+                return super().to_dict()
+
+        d = _Concrete()
+        assert d.name is None
+        assert d.sample() is None
+        assert d.validate() is None
+        assert d.get_display_params() is None
+        assert d.to_dict() is None
+
+
+class TestPERTModeEdgeCases:
+    """Cover the alpha/beta branches when the mode sits on a boundary."""
+
+    def test_mode_equals_min(self):
+        dist = PERTDistribution(min_value=2.0, mode_value=2.0, max_value=5.0)
+        assert dist._alpha == 1.0
+        assert dist._beta == dist.lamb + 1
+        for _ in range(50):
+            assert 2.0 <= dist.sample() <= 5.0
+
+    def test_mode_equals_max(self):
+        dist = PERTDistribution(min_value=2.0, mode_value=5.0, max_value=5.0)
+        assert dist._alpha == dist.lamb + 1
+        assert dist._beta == 1.0
+        for _ in range(50):
+            assert 2.0 <= dist.sample() <= 5.0
+
+
+class TestPERTValidation:
+    """Cover the non-negative validation branches for mode and max."""
+
+    def test_negative_mode_raises(self):
+        with pytest.raises(ValueError, match="mode_value must be non-negative"):
+            PERTDistribution(min_value=0.0, mode_value=-1.0, max_value=5.0)
+
+    def test_negative_max_raises(self):
+        with pytest.raises(ValueError, match="max_value must be non-negative"):
+            PERTDistribution(min_value=0.0, mode_value=0.0, max_value=-1.0)
+
+
+class TestRejectionSamplingFallback:
+    """Cover the clamp fallback when rejection sampling never lands in bounds."""
+
+    def test_normal_fallback_clamps_to_bounds(self, monkeypatch):
+        import planaco.distributions as dist_mod
+
+        dist = NormalDistribution(mean=5.0, std_dev=1.0, min_value=0.0, max_value=10.0)
+        # Force every draw out of bounds so the loop exhausts and clamps.
+        monkeypatch.setattr(dist_mod.random, "gauss", lambda mu, sigma: 999.0)
+        assert dist.sample() == 10.0
+
+    def test_lognormal_fallback_clamps_to_bounds(self, monkeypatch):
+        import planaco.distributions as dist_mod
+
+        dist = LogNormalDistribution(
+            mean=5.0, std_dev=1.0, min_value=0.0, max_value=10.0
+        )
+        monkeypatch.setattr(dist_mod.random, "lognormvariate", lambda mu, sigma: 999.0)
+        assert dist.sample() == 10.0

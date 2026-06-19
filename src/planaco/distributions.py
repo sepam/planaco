@@ -653,5 +653,6 @@ def create_distribution(
             max_value=max_value,
         )
 
-    # Should never reach here due to registry check
-    raise ValueError(f"Unknown estimator: {estimator}")
+    # Should never reach here: the registry check above rejects unknown
+    # estimators, and every registered estimator is handled in the chain.
+    raise ValueError(f"Unknown estimator: {estimator}")  # pragma: no cover

@@ -97,6 +97,14 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 
+[tool.coverage.run]
+source = ["planaco"]
+
+[tool.coverage.report]
+# Coverage gate: the suite covers 100%; fail if it regresses below 99%.
+fail_under = 99
+show_missing = true
+
 [tool.black]
 line-length = 88
 target-version = ["py38", "py39", "py310", "py311", "py312"]

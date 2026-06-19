@@ -181,3 +181,11 @@ def test_task_normal_estimator_string():
     assert task.estimator == "normal"
     # Distribution is None since no params provided
     assert task.distribution is None
+
+
+def test_estimate_without_distribution_raises():
+    """Task created without duration params has no distribution; estimate() raises."""
+    task = Task(name="Unconfigured")
+    assert task.distribution is None
+    with pytest.raises(ValueError, match="distribution not configured"):
+        task.estimate()

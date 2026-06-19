@@ -24,7 +24,7 @@ jobs:
         run: python -m pip install -e ".[dev]"
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: pytest tests/ -v --cov=planaco --cov-report=term-missing
 
   lint:
     name: Lint and type-check
