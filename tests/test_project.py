@@ -846,3 +846,57 @@ def test_empty_project_estimate_returns_zero():
     """A project with no tasks must estimate 0 without crashing."""
     p = Project(name="Empty")
     assert p.estimate() == 0.0
+
+
+def test_empty_project_critical_path_length_returns_zero():
+    """The forward-pass critical-path helper short-circuits on an empty project."""
+    p = Project(name="Empty")
+    assert p._calculate_critical_path({}) == 0.0
+
+
+def test_empty_project_critical_tasks_returns_empty():
+    """The CPM helper returns no critical tasks and zero duration when empty."""
+    p = Project(name="Empty")
+    assert p._get_critical_tasks_for_run({}) == (set(), 0.0)
+
+
+def test_dependency_graph_layout_falls_back_to_spring(monkeypatch, tmp_path):
+    """When graphviz and shell layouts both fail, fall back to spring layout."""
+    import planaco.project as project_mod
+
+    def _raise(*args, **kwargs):
+        raise RuntimeError("layout unavailable")
+
+    monkeypatch.setattr(project_mod.nx.nx_agraph, "graphviz_layout", _raise)
+    monkeypatch.setattr(project_mod.nx, "shell_layout", _raise)
+
+    p = Project(name="Graph")
+    a = Task(name="A", min_duration=1, mode_duration=2, max_duration=3)
+    b = Task(name="B", min_duration=1, mode_duration=2, max_duration=3)
+    p.add_task(a)
+    p.add_task(b, depends_on=[a])
+
+    out = tmp_path / "graph.png"
+    fig = p.plot_dependency_graph(save_path=str(out))
+    assert out.exists()
+    assert fig is not None
+
+
+def test_dependency_graph_without_save_path_shows(monkeypatch):
+    """With no save_path, plot_dependency_graph displays instead of saving."""
+    import planaco.project as project_mod
+
+    shown = {"called": False}
+
+    def _fake_show(*args, **kwargs):
+        shown["called"] = True
+
+    monkeypatch.setattr(project_mod.plt, "show", _fake_show)
+
+    p = Project(name="Graph")
+    a = Task(name="A", min_duration=1, mode_duration=2, max_duration=3)
+    p.add_task(a)
+
+    fig = p.plot_dependency_graph()
+    assert shown["called"] is True
+    assert fig is not None

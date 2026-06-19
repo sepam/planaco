@@ -1,6 +1,7 @@
 """Tests for Planaco CLI commands."""
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,16 @@ def valid_config_path():
 def seeded_config_path():
     """Path to test configuration with seed."""
     return str(FIXTURES_DIR / "project_with_seed.yaml")
+
+
+@pytest.fixture
+def invalid_config_path():
+    """Path to a config that exists but fails validation (raises ConfigError)."""
+    return str(FIXTURES_DIR / "invalid_missing_tasks.yaml")
+
+
+# Commands that load a config file and therefore share the same error handling.
+CONFIG_COMMANDS = ["run", "stats", "plot", "graph"]
 
 
 class TestMainGroup:
@@ -336,3 +347,45 @@ class TestSeedFunctionality:
             json_part = output[json_start:]
             data = json.loads(json_part)
             assert "mean" in data
+
+
+class TestErrorHandling:
+    """Tests for the error-handling arms of the config-loading commands."""
+
+    @pytest.mark.parametrize("command", CONFIG_COMMANDS)
+    def test_config_error_exits_1(self, runner, command, invalid_config_path):
+        """A config that fails validation hits the ConfigError arm (exit 1)."""
+        result = runner.invoke(main, [command, invalid_config_path])
+        assert result.exit_code == 1
+        assert "Error" in result.output
+
+    @pytest.mark.parametrize("command", CONFIG_COMMANDS)
+    def test_unexpected_error_exits_1(
+        self, runner, command, valid_config_path, monkeypatch
+    ):
+        """An unexpected exception hits the generic Exception arm (exit 1)."""
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError("unexpected failure")
+
+        # Every config command builds the project; force that step to blow up.
+        monkeypatch.setattr("planaco.cli.build_project_from_config", _boom)
+
+        result = runner.invoke(main, [command, valid_config_path])
+        assert result.exit_code == 1
+        assert "Error" in result.output
+        assert "unexpected failure" in result.output
+
+
+class TestModuleEntrypoint:
+    """Cover the ``if __name__ == '__main__'`` guard."""
+
+    def test_module_runs_as_main(self, monkeypatch):
+        import runpy
+
+        monkeypatch.setattr(sys, "argv", ["planaco", "--help"])
+        # Drop the cached module so runpy executes it cleanly as __main__.
+        monkeypatch.delitem(sys.modules, "planaco.cli", raising=False)
+        with pytest.raises(SystemExit) as exc:
+            runpy.run_module("planaco.cli", run_name="__main__")
+        assert exc.value.code == 0
