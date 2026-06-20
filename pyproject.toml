@@ -42,6 +42,7 @@ dependencies = [
     "numpy>=1.18",
     "PyYAML>=5.0",
     "networkx>=2.5",
+    "cairosvg>=2.5",
 ]
 
 [project.optional-dependencies]
@@ -89,6 +90,7 @@ module = [
     "click.*",
     "networkx.*",
     "yaml.*",
+    "cairosvg.*",
 ]
 ignore_missing_imports = true
 

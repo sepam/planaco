@@ -62,15 +62,11 @@ config : YAML configuration loading for project definitions.
 
 import csv
 import json
-import math
 from typing import Any, Dict, List, Optional, Tuple
 
-import matplotlib.figure
-import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
-import seaborn as sns
 
+from planaco import charts
 from planaco.task import Task
 
 
@@ -788,8 +784,9 @@ class Project:
         save_path: Optional[str] = None,
         show_percentiles: bool = False,
         percentiles: Optional[List[int]] = None,
-    ) -> matplotlib.figure.Figure:
-        """Plot the resulting histogram or cumulative distribution
+        theme: str = "light",
+    ) -> "charts.Chart":
+        """Plot the resulting histogram or cumulative distribution as an SVG chart.
 
         Parameters
         ----------
@@ -805,280 +802,110 @@ class Project:
             Whether to show percentile markers on the plot (default: False)
         percentiles : List[int], optional
             List of percentiles to show (default: [50, 85, 95])
+        theme : str
+            Planaco visual theme, "light" (default) or "dark". See
+            ``planaco.style`` and ``brand/STYLE_GUIDE.md``.
 
         Returns
         -------
-        fig : matplotlib.figure.Figure
-            Figure object containing the plot
+        charts.Chart
+            The rendered SVG chart. Save it with ``chart.save(path)`` (``.svg``
+            or ``.png``); it also renders inline in notebooks. When ``save_path``
+            is given the chart is written there as a side effect.
 
         Examples
         --------
         >>> project.plot(n=10000, show_percentiles=True, percentiles=[50, 85, 95])
         """
-        if percentiles is None:
-            percentiles = [50, 85, 95]
-
-        sns.set_theme(rc={"xtick.bottom": True, "ytick.left": True})
         sims = self._run_simulation(n)
-        fig, ax = plt.subplots(figsize=(10, 8))
-
         if hist:
-            # Use modern histplot instead of deprecated distplot
-            sns.histplot(
+            chart = charts.histogram(
                 sims,
-                bins=math.floor(max(sims)),
-                stat="count",
+                unit=self.unit,
+                n=n,
+                theme=theme,
+                show_percentiles=show_percentiles,
+                percentiles=percentiles,
                 kde=kde,
-                edgecolor="k",
-                linewidth=1,
-                ax=ax,
             )
-            ax.set_title(f"Histogram - {self.unit} to project completion " f"- n = {n}")
-            ax.set_xlabel(f"Duration ({self.unit})")
-            ax.set_ylabel("Count")
-
-            # Add percentile markers
-            if show_percentiles:
-                colors = ["red", "orange", "purple", "green", "blue"]
-                for i, p in enumerate(percentiles):
-                    p_value = float(np.percentile(sims, p))
-                    color = colors[i % len(colors)]
-                    ax.axvline(
-                        x=p_value,
-                        color=color,
-                        linestyle="--",
-                        linewidth=2,
-                        label=f"P{p}",
-                    )
-                    ax.text(
-                        p_value - 0.5,
-                        ax.get_ylim()[1] * 0.95 - i * ax.get_ylim()[1] * 0.05,
-                        f"P{p}",
-                        color=color,
-                        fontweight="bold",
-                    )
-            else:
-                # Default: show only median
-                median = float(np.median(sims))
-                ax.axvline(x=median, color="red", label="50%")
-                ax.text(median - 0.5, ax.get_ylim()[0], "50%", color="red")
-
-            ax.legend()
-
         else:
-            # Use modern histplot with cumulative option
-            sns.histplot(
-                sims,
-                bins=math.floor(max(sims)),
-                stat="probability",
-                cumulative=True,
-                edgecolor="k",
-                linewidth=1,
-                ax=ax,
-            )
-            ax.set_title(
-                f"Cumulative histogram - {self.unit} to project completion "
-                f"- n = {n}"
-            )
-            ax.set_xlabel(f"Duration ({self.unit})")
-            ax.set_ylabel("Cumulative Probability")
+            chart = charts.cdf(sims, unit=self.unit, n=n, theme=theme)
 
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches="tight")
-        else:
-            plt.show()
+            chart.save(save_path)
 
-        return fig
+        return chart
 
     def plot_dependency_graph(
         self,
         save_path: Optional[str] = None,
-        figsize: Tuple[int, int] = (12, 8),
-        node_size: int = 3000,
-        font_size: int = 9,
         show_durations: bool = True,
         show_criticality: bool = False,
         criticality_n: int = 1000,
         criticality_seed: Optional[int] = None,
-    ) -> matplotlib.figure.Figure:
-        """Plot the task dependency graph using networkx.
+        theme: str = "light",
+    ) -> "charts.Chart":
+        """Render the task dependency graph as an on-brand SVG chart.
+
+        Nodes are laid out in dependency layers (roots on the left) and colored
+        either structurally (teal start / navy middle / gold end) or, when
+        ``show_criticality`` is True, on the brand slate -> gold -> coral
+        gradient by how often each task lands on the critical path.
 
         Parameters
         ----------
         save_path : str, optional
-            Path to save the plot. If None, displays interactively
-        figsize : Tuple[int, int]
-            Figure size in inches (width, height)
-        node_size : int
-            Size of task nodes
-        font_size : int
-            Font size for labels
+            Path to save the chart. ``.svg`` is written directly; ``.png`` is
+            rasterized via ``cairosvg``. If None, the Chart is returned only.
         show_durations : bool
             Whether to show duration ranges on nodes
         show_criticality : bool
             Whether to color nodes by critical path frequency (default: False).
-            When True, nodes are colored on a gradient from green (rarely critical)
-            to red (always critical).
         criticality_n : int
             Number of simulations for criticality analysis (default: 1000)
         criticality_seed : int, optional
             Random seed for reproducible criticality analysis
+        theme : str
+            Planaco visual theme, "light" (default) or "dark".
 
         Returns
         -------
-        matplotlib.figure.Figure
-            The generated figure
+        charts.Chart
+            The rendered SVG chart (also written to ``save_path`` if given).
 
         Examples
         --------
-        >>> project.plot_dependency_graph(save_path='dependency_graph.png')
+        >>> project.plot_dependency_graph(save_path='dependency_graph.svg')
         >>> # Show criticality coloring
         >>> project.plot_dependency_graph(show_criticality=True, criticality_n=5000)
         """
-        # Create directed graph
-        G = nx.DiGraph()
-
-        # Add nodes with task information
+        labels: Dict[str, str] = {}
+        durations: Dict[str, str] = {}
         for task_id, task in self._tasks_dict.items():
-            label = task.name or task_id[:8]
+            labels[task_id] = task.name or task_id[:8]
             if show_durations and task.distribution is not None:
-                duration_info = f"\n{task.distribution.get_display_params()}"
-                label += duration_info
-            G.add_node(task_id, label=label)
+                durations[task_id] = task.distribution.get_display_params()
 
-        # Add edges (dependencies)
-        for task_id, deps in self.dependencies.items():
-            for dep_id in deps:
-                G.add_edge(dep_id, task_id)  # Edge from dependency to dependent
-
-        # Create figure
-        fig, ax = plt.subplots(figsize=figsize)
-
-        # Use hierarchical layout for DAG
-        try:
-            # Try to use graphviz layout if available
-            pos = nx.nx_agraph.graphviz_layout(G, prog="dot")
-        except Exception:
-            # Fallback layouts
-            try:
-                # Try shell layout for better DAG visualization
-                pos = nx.shell_layout(G)
-            except Exception:
-                # Final fallback to spring layout
-                pos = nx.spring_layout(G, k=2, iterations=50)
-
-        # Get criticality data if requested
-        criticality_by_id: Dict[str, float] = {}
+        criticality: Optional[Dict[str, float]] = None
         if show_criticality:
             analysis = self.get_critical_path_analysis(
                 n=criticality_n, seed=criticality_seed
             )
-            # Map task_id to frequency
-            for _task_name, data in analysis.items():
-                criticality_by_id[data["task_id"]] = data["frequency"]
+            criticality = {
+                data["task_id"]: data["frequency"] for data in analysis.values()
+            }
 
-        if show_criticality:
-            # Color nodes by criticality (green=0% to red=100%)
-            from matplotlib.colors import LinearSegmentedColormap
-
-            # Create green-yellow-red colormap
-            cmap = LinearSegmentedColormap.from_list(
-                "criticality", ["#90EE90", "#FFFF00", "#FF6B6B"]
-            )
-
-            # Get colors for each node based on criticality
-            node_colors = [criticality_by_id.get(n, 0.0) for n in G.nodes()]
-
-            nodes = nx.draw_networkx_nodes(
-                G,
-                pos,
-                node_color=node_colors,
-                cmap=cmap,
-                vmin=0.0,
-                vmax=1.0,
-                node_size=node_size,
-                ax=ax,
-            )
-
-            # Add colorbar
-            cbar = plt.colorbar(nodes, ax=ax, shrink=0.8)
-            cbar.set_label("Critical Path Frequency", rotation=270, labelpad=20)
-        else:
-            # Original behavior: color by node type
-            root_nodes = [n for n in G.nodes() if G.in_degree(n) == 0]
-            leaf_nodes = [n for n in G.nodes() if G.out_degree(n) == 0]
-            middle_nodes = [
-                n for n in G.nodes() if n not in root_nodes and n not in leaf_nodes
-            ]
-
-            if root_nodes:
-                nx.draw_networkx_nodes(
-                    G,
-                    pos,
-                    nodelist=root_nodes,
-                    node_color="lightgreen",
-                    node_size=node_size,
-                    ax=ax,
-                )
-            if middle_nodes:
-                nx.draw_networkx_nodes(
-                    G,
-                    pos,
-                    nodelist=middle_nodes,
-                    node_color="lightblue",
-                    node_size=node_size,
-                    ax=ax,
-                )
-            if leaf_nodes:
-                nx.draw_networkx_nodes(
-                    G,
-                    pos,
-                    nodelist=leaf_nodes,
-                    node_color="lightyellow",
-                    node_size=node_size,
-                    ax=ax,
-                )
-
-        # Draw edges
-        nx.draw_networkx_edges(
-            G,
-            pos,
-            edge_color="gray",
-            arrows=True,
-            arrowsize=20,
-            ax=ax,
-            connectionstyle="arc3,rad=0.1",
+        chart = charts.dependency_graph(
+            self._task_order,
+            labels,
+            durations,
+            self.dependencies,
+            title=f"Task Dependencies: {self.name or 'Project'}",
+            theme=theme,
+            criticality=criticality,
         )
 
-        # Draw labels
-        labels = nx.get_node_attributes(G, "label")
-        nx.draw_networkx_labels(G, pos, labels, font_size=font_size, ax=ax)
-
-        if show_criticality:
-            ax.set_title(
-                f"Task Dependencies: {self.name or 'Project'}\n"
-                f"(Colored by critical path frequency, n={criticality_n})"
-            )
-        else:
-            ax.set_title(f"Task Dependencies: {self.name or 'Project'}")
-        ax.axis("off")
-
-        # Add legend (only for non-criticality mode)
-        if not show_criticality:
-            from matplotlib.patches import Patch
-
-            legend_elements = [
-                Patch(facecolor="lightgreen", edgecolor="gray", label="Start Tasks"),
-                Patch(facecolor="lightblue", edgecolor="gray", label="Middle Tasks"),
-                Patch(facecolor="lightyellow", edgecolor="gray", label="End Tasks"),
-            ]
-            ax.legend(handles=legend_elements, loc="upper left")
-
-        plt.tight_layout()
-
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches="tight")
-        else:
-            plt.show()
+            chart.save(save_path)
 
-        return fig
+        return chart

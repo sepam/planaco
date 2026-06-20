@@ -344,6 +344,32 @@ def test_plot_with_percentiles():
             os.remove(tmp_path)
 
 
+def test_plot_dark_theme(tmp_path):
+    """plot() accepts the dark brand theme without error."""
+    p = Project(name="Dark Theme")
+    p.add_task(Task(name="A", min_duration=2, mode_duration=3, max_duration=7))
+    p.add_task(Task(name="B", min_duration=2, mode_duration=3, max_duration=7))
+
+    save_path = tmp_path / "hist_dark.png"
+    fig = p.plot(n=100, show_percentiles=True, theme="dark", save_path=str(save_path))
+    assert save_path.exists()
+    assert fig is not None
+
+
+def test_plot_dependency_graph_dark_theme(tmp_path):
+    """plot_dependency_graph() accepts the dark brand theme without error."""
+    a = Task(name="A", min_duration=2, mode_duration=3, max_duration=5)
+    b = Task(name="B", min_duration=2, mode_duration=3, max_duration=5)
+    p = Project(name="Dark Graph")
+    p.add_task(a)
+    p.add_task(b, depends_on=[a])
+
+    save_path = tmp_path / "graph_dark.png"
+    fig = p.plot_dependency_graph(save_path=str(save_path), theme="dark")
+    assert save_path.exists()
+    assert fig is not None
+
+
 # ============================================================================
 # Task Dependency Tests
 # ============================================================================
@@ -860,43 +886,31 @@ def test_empty_project_critical_tasks_returns_empty():
     assert p._get_critical_tasks_for_run({}) == (set(), 0.0)
 
 
-def test_dependency_graph_layout_falls_back_to_spring(monkeypatch, tmp_path):
-    """When graphviz and shell layouts both fail, fall back to spring layout."""
-    import planaco.project as project_mod
-
-    def _raise(*args, **kwargs):
-        raise RuntimeError("layout unavailable")
-
-    monkeypatch.setattr(project_mod.nx.nx_agraph, "graphviz_layout", _raise)
-    monkeypatch.setattr(project_mod.nx, "shell_layout", _raise)
-
-    p = Project(name="Graph")
+def test_dependency_graph_layered_layout_diamond(tmp_path):
+    """The self-layered layout handles a diamond (parallel) dependency graph."""
     a = Task(name="A", min_duration=1, mode_duration=2, max_duration=3)
     b = Task(name="B", min_duration=1, mode_duration=2, max_duration=3)
+    c = Task(name="C", min_duration=1, mode_duration=2, max_duration=3)
+    d = Task(name="D", min_duration=1, mode_duration=2, max_duration=3)
+
+    p = Project(name="Diamond")
     p.add_task(a)
     p.add_task(b, depends_on=[a])
+    p.add_task(c, depends_on=[a])
+    p.add_task(d, depends_on=[b, c])
 
-    out = tmp_path / "graph.png"
-    fig = p.plot_dependency_graph(save_path=str(out))
+    out = tmp_path / "graph.svg"
+    chart = p.plot_dependency_graph(save_path=str(out))
     assert out.exists()
-    assert fig is not None
+    assert "<svg" in str(chart)
 
 
-def test_dependency_graph_without_save_path_shows(monkeypatch):
-    """With no save_path, plot_dependency_graph displays instead of saving."""
-    import planaco.project as project_mod
-
-    shown = {"called": False}
-
-    def _fake_show(*args, **kwargs):
-        shown["called"] = True
-
-    monkeypatch.setattr(project_mod.plt, "show", _fake_show)
-
+def test_dependency_graph_without_save_path_returns_chart():
+    """With no save_path, plot_dependency_graph returns the Chart without saving."""
     p = Project(name="Graph")
     a = Task(name="A", min_duration=1, mode_duration=2, max_duration=3)
     p.add_task(a)
 
-    fig = p.plot_dependency_graph()
-    assert shown["called"] is True
-    assert fig is not None
+    chart = p.plot_dependency_graph()
+    assert chart is not None
+    assert "<svg" in str(chart)

@@ -157,7 +157,7 @@ project.plot(n=10000, hist=True)
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/v0.2.3/example/monte_carlo_estimation.png" alt="Monte Carlo Histogram" width="550"/>
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/monte_carlo_estimation.png" alt="Monte Carlo Histogram" width="600"/>
 </div>
 
 ### Cumulative Distribution
@@ -170,7 +170,7 @@ project.plot(n=10000, hist=False)
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/v0.2.3/example/monte_carlo_cumulative.png" alt="Cumulative Distribution" width="550"/>
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/monte_carlo_cumulative.png" alt="Cumulative Distribution" width="600"/>
 </div>
 
 The cumulative distribution shows the probability of completing the project within a given timeframe, accounting for both parallel and sequential task execution.
@@ -322,6 +322,12 @@ planaco run project.yaml -o results.json  # Export results (json or csv)
 planaco plot project.yaml -o chart.png    # Histogram or cumulative plot
 planaco graph project.yaml                # Visualize the task dependency graph
 ```
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/project_dependency_graph.png" alt="Task Dependency Graph" width="800"/>
+</div>
+
+Charts render as crisp, on-brand SVG (or PNG) — see the [brand &amp; style guide](brand/STYLE_GUIDE.md).
 
 Example YAML config:
 
