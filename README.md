@@ -35,7 +35,7 @@ Estimating the time it takes to complete a task or project is hard. Traditional 
 
 **Planaco helps you make better estimates by modeling tasks as random processes**, accounting for uncertainty and task dependencies through Monte Carlo simulation.
 
-> **Status:** Planaco is in **alpha** (v0.2.3). The public API may still change between releases.
+> **Status:** Planaco is in **alpha** (v0.3.0). The public API may still change between releases.
 
 ## Features
 
