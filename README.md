@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/sepam/planaco/v0.3.0/brand/planaco-lockup-dark.svg">
-    <img src="https://raw.githubusercontent.com/sepam/planaco/v0.3.0/brand/planaco-lockup-light.svg" alt="planaco" width="320">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/sepam/planaco/master/brand/planaco-lockup-dark.svg">
+    <img src="https://raw.githubusercontent.com/sepam/planaco/master/brand/planaco-lockup-light.svg" alt="planaco" width="320">
   </picture>
 
   **Probabilistic Project Planning with Monte Carlo Simulation**
@@ -84,7 +84,7 @@ task = Task(
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/v0.3.0/example/task_definition.png" alt="Task Definition" width="600"/>
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/task_definition.png" alt="Task Definition" width="600"/>
 </div>
 
 ### Build Projects with Dependencies
@@ -113,7 +113,7 @@ project.add_task(deploy, depends_on=[testing])
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/v0.3.0/example/project_estimation.png" alt="Project Estimation" width="700"/>
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/project_estimation.png" alt="Project Estimation" width="700"/>
 </div>
 
 ---
@@ -157,7 +157,7 @@ project.plot(n=10000, hist=True)
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/v0.3.0/example/monte_carlo_estimation.png" alt="Monte Carlo Histogram" width="600"/>
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/monte_carlo_estimation.png" alt="Monte Carlo Histogram" width="600"/>
 </div>
 
 ### Cumulative Distribution
@@ -170,7 +170,7 @@ project.plot(n=10000, hist=False)
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/v0.3.0/example/monte_carlo_cumulative.png" alt="Cumulative Distribution" width="600"/>
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/monte_carlo_cumulative.png" alt="Cumulative Distribution" width="600"/>
 </div>
 
 The cumulative distribution shows the probability of completing the project within a given timeframe, accounting for both parallel and sequential task execution.
@@ -324,7 +324,7 @@ planaco graph project.yaml                # Visualize the task dependency graph
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/v0.3.0/example/project_dependency_graph.png" alt="Task Dependency Graph" width="800"/>
+  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/project_dependency_graph.png" alt="Task Dependency Graph" width="800"/>
 </div>
 
 Charts render as crisp, on-brand SVG (or PNG) — see the [brand &amp; style guide](brand/STYLE_GUIDE.md).
