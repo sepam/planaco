@@ -42,6 +42,7 @@ dependencies = [
     "numpy>=1.18",
     "PyYAML>=5.0",
     "networkx>=2.5",
+    "cairosvg>=2.5",
 ]
 
 [project.optional-dependencies]
@@ -67,7 +68,7 @@ where = ["src"]
 version = {attr = "planaco.__version__"}
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
@@ -84,11 +85,10 @@ strict_equality = true
 [[tool.mypy.overrides]]
 module = [
     "matplotlib.*",
-    "seaborn.*",
     "numpy.*",
     "click.*",
-    "networkx.*",
     "yaml.*",
+    "cairosvg.*",
 ]
 ignore_missing_imports = true
 
