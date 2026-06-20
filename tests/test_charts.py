@@ -111,6 +111,12 @@ def test_histogram_default_n_uses_length(sims):
     assert f"n = {len(sims):,}" in svg
 
 
+def test_histogram_custom_title(sims):
+    svg = str(charts.histogram(sims, title="Task 1 estimate distribution"))
+    assert "Task 1 estimate distribution" in svg
+    assert "to project completion" not in svg
+
+
 def test_histogram_degenerate_single_value():
     # All identical samples -> single bin, no span; must not crash.
     svg = str(charts.histogram([5.0] * 50, kde=True))
