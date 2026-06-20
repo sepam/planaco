@@ -49,3 +49,6 @@ venv.bak/
 
 # Internal planning docs (kept local, not published)
 docs/internal/
+
+# Claude Code local config and memory
+.claude/
