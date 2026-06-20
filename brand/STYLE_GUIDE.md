@@ -80,9 +80,9 @@ These carry meaning in data viz — use them only for what they mean.
 **Percentiles warm as risk climbs:** gold → amber → coral. This is intentional and
 consistent everywhere — a reader learns it once.
 
-**Don't** reintroduce the generic seaborn purple, or the old green/red min–max
-coloring. Green/red clashes with navy+gold and carries the wrong (pass/fail)
-connotation for a probabilistic tool.
+**Don't** reintroduce generic charting-library defaults (grey background, purple
+bars), or the old green/red min–max coloring. Green/red clashes with navy+gold
+and carries the wrong (pass/fail) connotation for a probabilistic tool.
 
 ---
 
