@@ -102,37 +102,34 @@ body `16–18px/400` · small/label `13–14px` · code `13–15px`.
 Headings use tight tracking (`-0.02em`). Numbers in tables and stat readouts are
 set in JetBrains Mono so they align.
 
-In matplotlib, the font stack falls back gracefully:
-`Inter → Space Grotesk → Helvetica Neue → Arial → DejaVu Sans`, so plots still
-render cleanly on machines without the brand fonts installed.
+In the SVG charts the font stack falls back gracefully:
+`Inter → Space Grotesk → Helvetica Neue → Arial → sans-serif`, so charts still
+render cleanly where the brand fonts aren't installed.
 
 ---
 
 ## 4. Data visualization
 
-This is where the brand earns its keep. Default matplotlib/seaborn output is
-off-brand; apply the Planaco theme to fix it in one call:
+This is where the brand earns its keep. Planaco renders charts as native SVG
+(`planaco.charts`), so the on-brand look is built in — no theming call needed:
 
 ```python
-from planaco.style import apply_planaco_style
-
-apply_planaco_style("light")   # or "dark"
-fig = project.plot(n=10000, show_percentiles=True)
+chart = project.plot(n=10000, show_percentiles=True)
+chart.save("estimate.svg")   # or .png (rasterized via cairosvg)
 ```
 
 **Rules for every chart**
 
-- **Background:** canvas/paper, not seaborn grey. Top and right spines removed.
+- **Background:** canvas/paper, never grey. Top and right spines removed.
 - **Grid:** horizontal only, very low contrast. The data is the hero.
 - **Distribution bars:** navy/slate fill with a subtle stroke.
-- **The mode bar is gold** — the single tallest bar, echoing the logo. Use
-  `planaco.style.mode_bar_colors(counts, theme=...)` to color a histogram.
+- **The mode bar is gold** — the single tallest bar, echoing the logo.
 - **Percentile markers:** dashed vertical lines, labeled, colored gold/amber/coral
   for P50/P85/P95 via `planaco.style.percentile_color(p)`.
 - **CDF:** gold line over a translucent gold fill; a single guide line for the
   percentile you're highlighting.
 - **Dependency graph:** navy nodes; nodes on the critical path are gold. The
-  criticality gradient is `planaco.style.CRITICALITY_CMAP`
+  criticality gradient interpolates `planaco.style.CRITICALITY_STOPS`
   (slate → gold → coral, low → high), replacing the old green→red ramp.
 - **Titles** in Space Grotesk weight; axis labels in Inter; numeric ticks in mono.
 
@@ -148,9 +145,9 @@ Never imply false certainty — the whole point is the range.
 
 ## 6. Applying the system
 
-**Python / matplotlib** — `src/planaco/style.py`
-: `apply_planaco_style(theme)`, `PALETTE`, `PERCENTILE_COLORS`,
-  `percentile_color(p)`, `mode_bar_colors(...)`, `CRITICALITY_CMAP`.
+**Python** — tokens in `src/planaco/style.py` (`PALETTE`, `theme_colors(theme)`,
+`PERCENTILE_COLORS`, `percentile_color(p)`, `CRITICALITY_STOPS`), consumed by the
+SVG renderer in `src/planaco/charts.py`.
 
 **Web / CSS** — copy the `:root` and `[data-theme="light"]` custom properties from
 [`website/index.html`](../website/index.html). They are the same tokens listed

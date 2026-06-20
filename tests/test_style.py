@@ -1,22 +1,12 @@
-"""Tests for the planaco.style brand theming module."""
+"""Tests for the planaco.style design tokens."""
 
 import re
 
-import matplotlib as mpl
 import pytest
-from matplotlib.colors import LinearSegmentedColormap
 
 from planaco import style
 
 HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
-
-
-@pytest.fixture(autouse=True)
-def _restore_rcparams():
-    """Snapshot and restore global rcParams so theming doesn't leak."""
-    original = mpl.rcParams.copy()
-    yield
-    mpl.rcParams.update(original)
 
 
 # --------------------------------------------------------------------------- #
@@ -31,13 +21,11 @@ def test_percentile_colors_are_hex():
     assert set(style.PERCENTILE_COLORS) == {50, 85, 95}
 
 
-def test_criticality_cmap_is_colormap():
-    assert isinstance(style.CRITICALITY_CMAP, LinearSegmentedColormap)
-    # Endpoints: cool slate at 0.0, hot coral at 1.0; both opaque.
-    low = style.CRITICALITY_CMAP(0.0)
-    high = style.CRITICALITY_CMAP(1.0)
-    assert low[3] == 1.0 and high[3] == 1.0
-    assert low != high
+def test_criticality_stops_are_hex():
+    # slate -> gold -> coral, low -> high.
+    assert all(HEX_RE.match(v) for v in style.CRITICALITY_STOPS)
+    assert len(style.CRITICALITY_STOPS) == 3
+    assert style.CRITICALITY_STOPS[0] != style.CRITICALITY_STOPS[-1]
 
 
 # --------------------------------------------------------------------------- #
@@ -72,33 +60,6 @@ def test_theme_colors_returns_copy():
 
 
 # --------------------------------------------------------------------------- #
-# apply_planaco_style
-# --------------------------------------------------------------------------- #
-@pytest.mark.parametrize("theme", ["light", "dark"])
-def test_apply_planaco_style_sets_rcparams(theme):
-    colors = style.apply_planaco_style(theme)
-    assert mpl.rcParams["axes.facecolor"] == colors["bg"]
-    assert mpl.rcParams["figure.facecolor"] == colors["bg"]
-    assert mpl.rcParams["axes.spines.top"] is False
-    assert mpl.rcParams["axes.spines.right"] is False
-    assert mpl.rcParams["font.family"] == ["sans-serif"]
-    assert mpl.rcParams["font.sans-serif"][0] == "Inter"
-    # First color in the cycle is the navy/slate bar color.
-    cycle_colors = mpl.rcParams["axes.prop_cycle"].by_key()["color"]
-    assert cycle_colors[0] == colors["bar"]
-
-
-def test_apply_planaco_style_returns_colors():
-    colors = style.apply_planaco_style("dark")
-    assert colors == style.theme_colors("dark")
-
-
-def test_apply_planaco_style_invalid_raises():
-    with pytest.raises(ValueError, match="Unknown theme"):
-        style.apply_planaco_style("neon")
-
-
-# --------------------------------------------------------------------------- #
 # percentile_color
 # --------------------------------------------------------------------------- #
 def test_percentile_color_known():
@@ -109,27 +70,3 @@ def test_percentile_color_known():
 
 def test_percentile_color_unknown_falls_back_to_coral():
     assert style.percentile_color(99) == style.PALETTE["coral"]
-
-
-# --------------------------------------------------------------------------- #
-# mode_bar_colors
-# --------------------------------------------------------------------------- #
-def test_mode_bar_colors_highlights_tallest():
-    colors = style.mode_bar_colors([1, 5, 2], theme="light")
-    light = style.theme_colors("light")
-    assert colors == [light["bar"], light["gold"], light["bar"]]
-
-
-def test_mode_bar_colors_dark_theme():
-    colors = style.mode_bar_colors([3, 1], theme="dark")
-    dark = style.theme_colors("dark")
-    assert colors == [dark["gold"], dark["bar"]]
-
-
-def test_mode_bar_colors_empty():
-    assert style.mode_bar_colors([]) == []
-
-
-def test_mode_bar_colors_invalid_theme_raises():
-    with pytest.raises(ValueError, match="Unknown theme"):
-        style.mode_bar_colors([1, 2, 3], theme="nope")

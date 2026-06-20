@@ -37,7 +37,6 @@ keywords = [
 ]
 dependencies = [
     "click>=7.0",
-    "matplotlib>=3.0",
     "numpy>=1.18",
     "PyYAML>=5.0",
     "cairosvg>=2.5",
@@ -82,7 +81,6 @@ strict_equality = true
 
 [[tool.mypy.overrides]]
 module = [
-    "matplotlib.*",
     "numpy.*",
     "click.*",
     "yaml.*",
