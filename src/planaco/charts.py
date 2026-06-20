@@ -167,8 +167,8 @@ def _fmt(value: float) -> str:
 # --------------------------------------------------------------------------- #
 # Histogram
 # --------------------------------------------------------------------------- #
-def _bin_count(sims: Sequence[float]) -> int:
-    span = max(sims) - min(sims)
+def _bin_count(sims: "np.ndarray") -> int:
+    span = float(sims.max() - sims.min())
     if span <= 0:
         return 1
     return int(min(40, max(12, math.floor(span))))
