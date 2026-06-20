@@ -195,8 +195,13 @@ def histogram(
     show_percentiles: bool = False,
     percentiles: Optional[List[int]] = None,
     kde: bool = False,
+    title: Optional[str] = None,
 ) -> Chart:
-    """Render a histogram of simulated durations as an on-brand SVG chart."""
+    """Render a histogram of simulated durations as an on-brand SVG chart.
+
+    ``title`` overrides the default heading (useful for charting a single
+    task's estimates rather than a whole project).
+    """
     if percentiles is None:
         percentiles = [50, 85, 95]
     c = theme_colors(theme)
@@ -221,7 +226,8 @@ def histogram(
     parts = _open_svg(W, H, c["bg"])
 
     # Title
-    title = f"{unit.capitalize()} to project completion · n = {n:,}"
+    if title is None:
+        title = f"{unit.capitalize()} to project completion · n = {n:,}"
     parts.append(
         _text(pad_l, 34, title, fill=c["fg"], size=20, weight="700", font=_FONT_DISPLAY)
     )

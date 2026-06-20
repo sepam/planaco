@@ -8,14 +8,9 @@ fails the test suite instead of failing for a new user.
 import re
 from pathlib import Path
 
-import matplotlib
+import pytest
 
-matplotlib.use("Agg")  # Non-interactive backend for testing
-
-import matplotlib.pyplot as plt  # noqa: E402
-import pytest  # noqa: E402
-
-from planaco.config import build_project_from_config, load_config  # noqa: E402
+from planaco.config import build_project_from_config, load_config
 
 README_PATH = Path(__file__).resolve().parent.parent / "README.md"
 
@@ -46,8 +41,6 @@ def test_readme_python_examples_run(tmp_path, monkeypatch):
                 f"README.md python block {i} raised {type(e).__name__}: {e}\n"
                 f"---\n{block}---"
             )
-        finally:
-            plt.close("all")
 
 
 def test_readme_yaml_examples_load(tmp_path):

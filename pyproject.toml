@@ -38,10 +38,8 @@ keywords = [
 dependencies = [
     "click>=7.0",
     "matplotlib>=3.0",
-    "seaborn>=0.11",
     "numpy>=1.18",
     "PyYAML>=5.0",
-    "networkx>=2.5",
     "cairosvg>=2.5",
 ]
 

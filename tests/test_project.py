@@ -657,10 +657,6 @@ def test_critical_path_complex_dag():
 
 def test_plot_dependency_graph_with_criticality(tmp_path):
     """Test that plot_dependency_graph works with criticality coloring"""
-    import matplotlib
-
-    matplotlib.use("Agg")  # Non-interactive backend for testing
-
     task1 = Task(name="Task1", min_duration=5, mode_duration=5, max_duration=5)
     task2 = Task(name="Task2", min_duration=3, mode_duration=3, max_duration=3)
 
