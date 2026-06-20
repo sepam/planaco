@@ -171,7 +171,9 @@ def _bin_count(sims: "np.ndarray") -> int:
     span = float(sims.max() - sims.min())
     if span <= 0:
         return 1
-    return int(min(40, max(12, math.floor(span))))
+    # ~2 bins per unit gives the slim, web-clean bars from website/index.html
+    # (~26 bars across a typical project span) rather than a dozen fat blocks.
+    return int(min(48, max(20, round(span * 2))))
 
 
 def _gaussian_kde(sims: "np.ndarray", grid: "np.ndarray") -> "np.ndarray":
@@ -208,8 +210,10 @@ def histogram(
     data = np.asarray(sims, dtype=float)
     n = n if n is not None else len(data)
 
-    W, H = 900, 540
-    pad_l, pad_r, pad_t, pad_b = 64, 28, 64, 56
+    W, H = 900, 560
+    # No y labels (gridlines carry the scale), so the left margin is slim. The
+    # deep bottom margin makes room for the legend row beneath the x axis.
+    pad_l, pad_r, pad_t, pad_b = 40, 28, 64, 92
     plot_w = W - pad_l - pad_r
     plot_h = H - pad_t - pad_b
     base = pad_t + plot_h
@@ -232,33 +236,28 @@ def histogram(
         _text(pad_l, 34, title, fill=c["fg"], size=20, weight="700", font=_FONT_DISPLAY)
     )
 
-    # Horizontal gridlines + y labels
+    # Horizontal gridlines (unlabeled — the legend and percentile markers carry
+    # the meaning; numeric counts on the y axis are just clutter).
     for g in range(5):
         y = pad_t + plot_h * g / 4
         parts.append(_line(pad_l, y, pad_l + plot_w, y, stroke=c["grid"]))
-        value = y_max * (1 - g / 4)
-        parts.append(
-            _text(
-                pad_l - 10,
-                y + 4,
-                f"{round(value):,}",
-                fill=c["muted"],
-                size=12,
-                anchor="end",
-                font=_FONT_MONO,
-            )
-        )
 
-    # Bars (modal bar in gold)
+    # Bars (modal bar in gold). The gap is a fixed fraction of the slot width so
+    # spacing stays even at any bin count; the mode bar takes a gold stroke
+    # rather than the navy bar edge so its yellow reads clean, not muddy.
     for i, count in enumerate(counts):
         x0 = x_of(float(edges[i]))
         x1 = x_of(float(edges[i + 1]))
-        bw = max(1.0, x1 - x0 - 1.5)
+        step = x1 - x0
+        bw = max(1.0, step * 0.78)
+        bx = x0 + (step - bw) / 2
         bh = plot_h * count / y_max
-        fill = c["gold"] if i == mode_idx else c["bar"]
+        is_mode = i == mode_idx
+        fill = c["gold"] if is_mode else c["bar"]
+        stroke = c["gold"] if is_mode else c["bar_edge"]
         parts.append(
-            f'<rect x="{x0:.1f}" y="{base - bh:.1f}" width="{bw:.1f}" '
-            f'height="{bh:.1f}" rx="1.5" fill="{fill}" stroke="{c["bar_edge"]}" '
+            f'<rect x="{bx:.1f}" y="{base - bh:.1f}" width="{bw:.1f}" '
+            f'height="{bh:.1f}" rx="1.5" fill="{fill}" stroke="{stroke}" '
             f'stroke-width="1"/>'
         )
 
@@ -291,16 +290,6 @@ def histogram(
                 font=_FONT_MONO,
             )
         )
-    parts.append(
-        _text(
-            pad_l + plot_w / 2,
-            H - 12,
-            f"Duration ({unit})",
-            fill=c["muted"],
-            size=13,
-            anchor="middle",
-        )
-    )
 
     # Percentile markers (or the median); each line is labeled inline.
     if show_percentiles:
@@ -336,14 +325,28 @@ def histogram(
             )
         )
 
-    # A single "mode" key in the title band (explains the gold bar).
-    parts.append(
-        f'<rect x="{W - pad_r - 168}" y="22" width="12" height="12" rx="3" '
-        f'fill="{c["gold"]}"/>'
-    )
-    parts.append(
-        _text(W - pad_r - 150, 32, "mode (most likely)", fill=c["muted"], size=12)
-    )
+    # Legend row, centered beneath the x axis. Mirrors website/index.html: the
+    # navy bars, the gold mode bar, then the percentile markers in play.
+    legend = [
+        ("simulated outcomes", c["bar"]),
+        ("mode (most likely)", c["gold"]),
+    ]
+    if show_percentiles:
+        legend += [(f"P{p}", percentile_color(p)) for p in percentiles]
+    else:
+        legend.append(("P50", c["gold"]))
+
+    sw, sw_gap, item_gap = 12, 7, 22
+    widths = [sw + sw_gap + len(label) * 6.6 for label, _ in legend]
+    lx = pad_l + plot_w / 2 - (sum(widths) + item_gap * (len(legend) - 1)) / 2
+    ly = base + 54
+    for (label, color), w in zip(legend, widths):
+        parts.append(
+            f'<rect x="{lx:.1f}" y="{ly - 10:.1f}" width="{sw}" height="{sw}" '
+            f'rx="3" fill="{color}"/>'
+        )
+        parts.append(_text(lx + sw + sw_gap, ly, label, fill=c["muted"], size=12))
+        lx += w + item_gap
 
     parts.append("</svg>")
     return Chart("\n".join(parts))
