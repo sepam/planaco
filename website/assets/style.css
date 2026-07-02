@@ -173,7 +173,7 @@
     font-family: "JetBrains Mono", monospace; font-size: 15px;
   }
   .install .prompt { color: var(--gold); }
-  .install .copy { color: var(--text-muted); font-size: 13px; cursor: pointer; }
+  .install .copy { color: var(--text-muted); font-size: 13px; cursor: pointer; appearance: none; background: none; border: none; padding: 0; font: inherit; font-family: inherit; }
   .install .copy:hover { color: var(--text); }
   .btn-primary {
     background: var(--gold); color: #0a1628;
@@ -220,16 +220,10 @@
   .step p { color: var(--text-muted); font-size: 15px; }
 
   /* chart showcase */
-  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 880px) { .charts { grid-template-columns: 1fr; } }
   .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
-  .chart-card.full { grid-column: 1 / -1; }
   .chart-card h3 { font-size: 18px; margin-bottom: 4px; }
   .chart-card .desc { color: var(--text-muted); font-size: 14px; margin-bottom: 18px; }
   .chart-card svg { width: 100%; height: auto; display: block; }
-  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
-  .legend span { display: inline-flex; align-items: center; gap: 7px; }
-  .legend .sw { width: 12px; height: 12px; border-radius: 3px; }
 
   /* demo */
   .demo-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 24px; align-items: start; margin-bottom: 24px; }
@@ -315,8 +309,6 @@
   }
   .btn-ghost:hover { background: var(--surface-2); }
 
-  .badge { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: 3px 8px; }
-
   /* hero histogram build-in */
   .bar-rise {
     transform-box: fill-box; transform-origin: 50% 100%;
@@ -328,4 +320,5 @@
   @keyframes mark-in { from { opacity: 0; } to { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) {
     .bar-rise, .mark-in { animation: none; }
+    html { scroll-behavior: auto; }
   }

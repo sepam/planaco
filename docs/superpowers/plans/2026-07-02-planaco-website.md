@@ -21,7 +21,7 @@
 - Percentile colors always: P50 gold, P85 amber, P95 coral.
 - All animation must be disabled under `prefers-reduced-motion: reduce`.
 - Local preview for every verification step: `python3 -m http.server 8213 -d website` then `http://localhost:8213/`.
-- JS unit tests: `node --test tests/website/` (node v26 is installed).
+- JS unit tests: `node --test 'tests/website/*.mjs'` (node v26 is installed).
 - Line numbers referenced for `website/index.html` are for the file as committed at `19523fd` (the prototype). They apply to Task 1 only; later tasks locate content by anchor/id.
 
 ---
@@ -586,7 +586,7 @@ test("clampTriple: changed slider wins, neighbors follow", () => {
 - [ ] **Step 2: Run the tests — they must fail**
 
 ```bash
-node --test tests/website/
+node --test 'tests/website/*.mjs'
 ```
 
 Expected: FAIL — `Cannot find module '…/website/assets/mc.js'`.
@@ -672,7 +672,7 @@ Expected: FAIL — `Cannot find module '…/website/assets/mc.js'`.
 - [ ] **Step 4: Run the tests — they must pass**
 
 ```bash
-node --test tests/website/
+node --test 'tests/website/*.mjs'
 ```
 
 Expected: all 9 tests PASS.
@@ -952,7 +952,7 @@ And call `buildDemoControls()` once, immediately before the final `renderAll()` 
 - [ ] **Step 6: Verify**
 
 ```bash
-node --test tests/website/    # engine still green
+node --test 'tests/website/*.mjs'    # engine still green
 grep -c 'id="charts"' website/index.html   # expect 0
 grep -c "drawCDF\|drawDAG" website/assets/site.js  # expect 0
 ```
@@ -1427,7 +1427,7 @@ Verify each item from the spec:
 - [ ] **Step 2: Run the JS unit tests one final time**
 
 ```bash
-node --test tests/website/
+node --test 'tests/website/*.mjs'
 ```
 
 Expected: all PASS.
