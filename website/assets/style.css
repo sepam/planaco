@@ -173,7 +173,7 @@
     font-family: "JetBrains Mono", monospace; font-size: 15px;
   }
   .install .prompt { color: var(--gold); }
-  .install .copy { color: var(--text-faint); font-size: 13px; cursor: pointer; }
+  .install .copy { color: var(--text-muted); font-size: 13px; cursor: pointer; }
   .install .copy:hover { color: var(--text); }
   .btn-primary {
     background: var(--gold); color: #0a1628;
@@ -238,7 +238,7 @@
   .demo-task:first-of-type { border-top: none; padding-top: 0; }
   .demo-task .task-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
   .demo-task .task-name { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px; }
-  .demo-task .task-note { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--text-faint); text-align: right; }
+  .demo-task .task-note { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--text-muted); text-align: right; }
   .demo-row { display: grid; grid-template-columns: 44px 1fr 30px; gap: 10px; align-items: center; margin: 5px 0; }
   .demo-row .p-label { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-muted); }
   .demo-row .p-value { font-family: "JetBrains Mono", monospace; font-size: 12px; text-align: right; }
@@ -262,8 +262,8 @@
     padding: 20px; transition: border-color .2s, transform .15s;
   }
   .dist:hover { border-color: var(--gold-strong); transform: translateY(-2px); }
-  .dist h4 { font-family: "Space Grotesk", sans-serif; font-size: 16px; margin-bottom: 2px; }
-  .dist .when { color: var(--text-faint); font-size: 12px; margin-bottom: 14px; font-family: "JetBrains Mono", monospace; }
+  .dist h3 { font-family: "Space Grotesk", sans-serif; font-size: 16px; margin-bottom: 2px; }
+  .dist .when { color: var(--text-muted); font-size: 12px; margin-bottom: 14px; font-family: "JetBrains Mono", monospace; }
   .dist svg { width: 100%; height: 56px; display: block; }
 
   /* code tabs */
@@ -293,7 +293,7 @@
   .tok-key { color: var(--gold); }
   .tok-str { color: var(--teal); }
   .tok-num { color: var(--coral); }
-  .tok-com { color: var(--text-faint); }
+  .tok-com { color: var(--text-muted); }
   .stat-line { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--border); }
   .stat-line .v { color: var(--gold); font-weight: 500; }
 

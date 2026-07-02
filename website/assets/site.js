@@ -147,7 +147,7 @@ const DISTS = [
 ];
 function renderDists(){
   document.getElementById('dists').innerHTML = DISTS.map(([n,w,k])=>
-    `<div class="dist"><h4>${n}</h4><div class="when">${w}</div>${sparkSVG(k)}</div>`).join('');
+    `<div class="dist"><h3>${n}</h3><div class="when">${w}</div>${sparkSVG(k)}</div>`).join('');
 }
 
 /* ---- live demo ---- */
