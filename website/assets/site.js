@@ -17,56 +17,74 @@ function percentileIndex(p){
   return HEIGHTS.length-1;
 }
 
-function drawHistogram(id, opts){
-  const svg = document.getElementById(id);
-  if(!svg) return;
+/* Data-driven histogram renderer.
+   model: {values:number[], xMin, xMax, modeIndex, marks:[{value,color,label}]}
+   opts:  {compact?:bool, animate?:bool, xTicks?:number[]} */
+function renderHist(svg, model, opts = {}){
   svg.innerHTML = "";
   const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
   const padL = opts.compact ? 8 : 48, padR = opts.compact ? 8 : 20;
   const padT = 18, padB = opts.compact ? 14 : 38;
   const plotW = W - padL - padR, plotH = H - padT - padB, base = padT + plotH;
-  const step = plotW / HEIGHTS.length, bw = step * 0.78;
+  const n = model.values.length;
+  const step = plotW / n, bw = step * 0.78;
+  const peak = Math.max(...model.values) || 1;
 
   const bar = v('--chart-bar'), barStroke = v('--chart-bar-stroke'), gold = v('--gold');
   const grid = v('--chart-grid'), axis = v('--chart-axis'), muted = v('--text-muted');
 
-  // gridlines
   if(!opts.compact){
-    for(let g=0; g<=4; g++){
-      const y = padT + plotH*(g/4);
-      svg.appendChild(el('line',{x1:padL,y1:y,x2:padL+plotW,y2:y,stroke:grid,'stroke-width':1}));
+    for(let g = 0; g <= 4; g++){
+      const y = padT + plotH * (g / 4);
+      svg.appendChild(el('line', {x1: padL, y1: y, x2: padL + plotW, y2: y, stroke: grid, 'stroke-width': 1}));
     }
   }
-  // bars
-  HEIGHTS.forEach((h,i)=>{
-    const x = padL + i*step + (step-bw)/2;
-    const bh = plotH * h/100;
-    const r = el('rect',{x:x, y:base-bh, width:bw, height:bh, rx:1.5,
-      fill: i===MODE_INDEX ? gold : bar,
-      stroke: i===MODE_INDEX ? gold : barStroke, 'stroke-width':1});
+  model.values.forEach((hv, i) => {
+    const x = padL + i * step + (step - bw) / 2;
+    const bh = plotH * hv / peak;
+    const isMode = i === model.modeIndex;
+    const r = el('rect', {x: x, y: base - bh, width: bw, height: bh, rx: 1.5,
+      fill: isMode ? gold : bar, stroke: isMode ? gold : barStroke, 'stroke-width': 1});
+    if(opts.animate){ r.classList.add('bar-rise'); r.style.setProperty('--i', i); }
     svg.appendChild(r);
   });
-  // axis baseline
-  svg.appendChild(el('line',{x1:padL,y1:base,x2:padL+plotW,y2:base,stroke:axis,'stroke-width':1}));
+  svg.appendChild(el('line', {x1: padL, y1: base, x2: padL + plotW, y2: base, stroke: axis, 'stroke-width': 1}));
 
-  if(opts.compact) return;
+  const span = (model.xMax - model.xMin) || 1;  // degenerate case: all sliders equal
+  const xPos = val => padL + (val - model.xMin) / span * plotW;
+  (opts.xTicks || []).forEach(val => {
+    const t = el('text', {x: xPos(val), y: base + 22, fill: muted, 'font-size': 12,
+      'text-anchor': 'middle', 'font-family': 'JetBrains Mono, monospace'});
+    t.textContent = Math.round(val); svg.appendChild(t);
+  });
+  (model.marks || []).forEach(m => {
+    const x = xPos(m.value);
+    const line = el('line', {x1: x, y1: padT, x2: x, y2: base, stroke: m.color, 'stroke-width': 2, 'stroke-dasharray': '5 4'});
+    const lbl = el('text', {x: x + 6, y: padT + 13, fill: m.color, 'font-size': 12, 'font-weight': 600,
+      'font-family': 'JetBrains Mono, monospace'});
+    lbl.textContent = m.label;
+    if(opts.animate){ line.classList.add('mark-in'); lbl.classList.add('mark-in'); }
+    svg.appendChild(line); svg.appendChild(lbl);
+  });
+}
 
-  // x labels
-  [14,18,22,26,30].forEach(val=>{
-    const frac = (val - X_MIN)/(X_MAX - X_MIN);
-    const x = padL + frac*plotW;
-    const t = el('text',{x:x, y:base+22, fill:muted, 'font-size':12, 'text-anchor':'middle', 'font-family':'JetBrains Mono, monospace'});
-    t.textContent = val; svg.appendChild(t);
-  });
-  // percentile markers
-  const marks = [{p:0.50,c:v('--gold'),l:'P50'},{p:0.85,c:v('--amber'),l:'P85'},{p:0.95,c:v('--coral'),l:'P95'}];
-  marks.forEach(m=>{
-    const idx = percentileIndex(m.p);
-    const x = padL + (idx+0.5)*step;
-    svg.appendChild(el('line',{x1:x,y1:padT,x2:x,y2:base,stroke:m.c,'stroke-width':2,'stroke-dasharray':'5 4'}));
-    const lbl = el('text',{x:x+6,y:padT+13,fill:m.c,'font-size':12,'font-weight':600,'font-family':'JetBrains Mono, monospace'});
-    lbl.textContent = m.l; svg.appendChild(lbl);
-  });
+/* Static illustrative model built from the prototype HEIGHTS data. */
+function staticModel(withMarks){
+  const idxVal = i => X_MIN + (i + 0.5) / HEIGHTS.length * (X_MAX - X_MIN);
+  return {
+    values: HEIGHTS, xMin: X_MIN, xMax: X_MAX, modeIndex: MODE_INDEX,
+    marks: withMarks ? [
+      {value: idxVal(percentileIndex(0.50)), color: v('--gold'),  label: 'P50'},
+      {value: idxVal(percentileIndex(0.85)), color: v('--amber'), label: 'P85'},
+      {value: idxVal(percentileIndex(0.95)), color: v('--coral'), label: 'P95'},
+    ] : [],
+  };
+}
+
+function drawHistogram(id, opts){
+  const svg = document.getElementById(id);
+  if(!svg) return;
+  renderHist(svg, staticModel(!opts.compact), {compact: opts.compact, xTicks: opts.compact ? [] : [14, 18, 22, 26, 30]});
 }
 
 function drawPointEstimate(id){
@@ -84,97 +102,6 @@ function drawPointEstimate(id){
   const lbl=el('text',{x:x+bw/2, y:padT-4, fill:coral, 'font-size':12, 'font-weight':600, 'text-anchor':'middle', 'font-family':'JetBrains Mono, monospace'});
   lbl.textContent='21'; svg.appendChild(lbl);
   svg.appendChild(el('line',{x1:padL,y1:base,x2:padL+plotW,y2:base,stroke:axis,'stroke-width':1}));
-}
-
-function drawCDF(id){
-  const svg = document.getElementById(id);
-  svg.innerHTML = "";
-  const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
-  const padL = 38, padR = 16, padT = 16, padB = 34;
-  const plotW = W-padL-padR, plotH = H-padT-padB, base = padT+plotH;
-  const total = HEIGHTS.reduce((a,b)=>a+b,0);
-  const text = v('--text'), gold = v('--gold'), grid = v('--chart-grid'), axis = v('--chart-axis'), muted = v('--text-muted');
-
-  // gridlines + y labels
-  [0,0.25,0.5,0.75,1].forEach(q=>{
-    const y = base - plotH*q;
-    svg.appendChild(el('line',{x1:padL,y1:y,x2:padL+plotW,y2:y,stroke:grid,'stroke-width':1}));
-    const t = el('text',{x:padL-8,y:y+4,fill:muted,'font-size':11,'text-anchor':'end','font-family':'JetBrains Mono, monospace'});
-    t.textContent = q.toFixed(1); svg.appendChild(t);
-  });
-
-  // build cumulative points
-  let cum = 0; const pts = [];
-  HEIGHTS.forEach((h,i)=>{ cum += h; const x = padL + (i+0.5)/HEIGHTS.length*plotW; const y = base - (cum/total)*plotH; pts.push([x,y]); });
-
-  // area
-  let d = `M ${padL} ${base} `;
-  pts.forEach(p=> d += `L ${p[0].toFixed(1)} ${p[1].toFixed(1)} `);
-  d += `L ${padL+plotW} ${base} Z`;
-  svg.appendChild(el('path',{d:d, fill:'var(--gold-soft)'}));
-  // line
-  let dl = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} `;
-  pts.slice(1).forEach(p=> dl += `L ${p[0].toFixed(1)} ${p[1].toFixed(1)} `);
-  svg.appendChild(el('path',{d:dl, fill:'none', stroke:gold, 'stroke-width':2.5, 'stroke-linejoin':'round'}));
-
-  // P85 guide
-  const idx = percentileIndex(0.85), px = padL + (idx+0.5)/HEIGHTS.length*plotW;
-  svg.appendChild(el('line',{x1:px,y1:padT,x2:px,y2:base,stroke:v('--amber'),'stroke-width':1.5,'stroke-dasharray':'4 4'}));
-  svg.appendChild(el('line',{x1:padL,y1:base-0.85*plotH,x2:px,y2:base-0.85*plotH,stroke:v('--amber'),'stroke-width':1.5,'stroke-dasharray':'4 4'}));
-  const dot = el('circle',{cx:px,cy:base-0.85*plotH,r:4,fill:v('--amber')}); svg.appendChild(dot);
-
-  svg.appendChild(el('line',{x1:padL,y1:base,x2:padL+plotW,y2:base,stroke:axis,'stroke-width':1}));
-  [16,20,24,28].forEach(val=>{
-    const frac=(val-X_MIN)/(X_MAX-X_MIN), x=padL+frac*plotW;
-    const t=el('text',{x:x,y:base+20,fill:muted,'font-size':11,'text-anchor':'middle','font-family':'JetBrains Mono, monospace'});
-    t.textContent=val; svg.appendChild(t);
-  });
-}
-
-function drawDAG(id){
-  const svg = document.getElementById(id);
-  svg.innerHTML = "";
-  const text=v('--text'), gold=v('--gold'), bar=v('--chart-bar'), stroke=v('--chart-bar-stroke'), muted=v('--text-muted'), canvas=v('--canvas');
-  // nodes: [x,y,label,dur,critical]
-  const N = {
-    design:   [56, 140, 'Design', '5–7–14', true],
-    frontend: [190, 70, 'Frontend','8–12–15', false],
-    backend:  [190, 210,'Backend', '10–15–25', true],
-    test:     [300, 140, 'Testing','2–3–5', true],
-  };
-  const edges = [['design','frontend',false],['design','backend',true],['frontend','test',false],['backend','test',true]];
-  const nw=86, nh=48;
-  // edges
-  edges.forEach(([a,b,crit])=>{
-    const [ax,ay]=N[a], [bx,by]=N[b];
-    const x1=ax+nw/2, y1=ay, x2=bx-nw/2, y2=by;
-    svg.appendChild(el('path',{d:`M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`,
-      fill:'none', stroke: crit?gold:stroke, 'stroke-width': crit?2.5:1.5, 'marker-end':`url(#arrow-${crit?'g':'n'})`, opacity: crit?1:0.6}));
-  });
-  // arrow markers
-  const defs = el('defs',{});
-  [['arrow-g',gold],['arrow-n',stroke]].forEach(([mid,col])=>{
-    const m = el('marker',{id:mid,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'});
-    m.appendChild(el('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:col}));
-    defs.appendChild(m);
-  });
-  svg.appendChild(defs);
-  // nodes
-  for(const k in N){
-    const [x,y,label,dur,crit]=N[k];
-    const g = el('g',{});
-    g.appendChild(el('rect',{x:x-nw/2,y:y-nh/2,width:nw,height:nh,rx:10,
-      fill: crit ? 'var(--gold-soft)' : v('--surface-2'),
-      stroke: crit?gold:stroke, 'stroke-width': crit?2:1.5}));
-    const t1=el('text',{x:x,y:y-2,fill:text,'font-size':13,'font-weight':600,'text-anchor':'middle','font-family':'Space Grotesk, sans-serif'});
-    t1.textContent=label; g.appendChild(t1);
-    const t2=el('text',{x:x,y:y+14,fill:muted,'font-size':10,'text-anchor':'middle','font-family':'JetBrains Mono, monospace'});
-    t2.textContent=dur; g.appendChild(t2);
-    svg.appendChild(g);
-  }
-  // caption
-  const c=el('text',{x:200,y:290,fill:muted,'font-size':11,'text-anchor':'middle','font-family':'JetBrains Mono, monospace'});
-  c.textContent='gold = on critical path'; svg.appendChild(c);
 }
 
 /* ---- distribution sparklines ---- */
@@ -217,13 +144,80 @@ function renderDists(){
     `<div class="dist"><h4>${n}</h4><div class="when">${w}</div>${sparkSVG(k)}</div>`).join('');
 }
 
+/* ---- live demo ---- */
+const DEMO_TASKS = [
+  { key: 'design',   label: 'Design',   note: 'blocks Frontend & Backend',   triple: [5, 7, 14] },
+  { key: 'frontend', label: 'Frontend', note: 'after Design ∥ Backend',      triple: [8, 12, 15] },
+  { key: 'backend',  label: 'Backend',  note: 'after Design ∥ Frontend',     triple: [10, 15, 25] },
+  { key: 'testing',  label: 'Testing',  note: 'waits for both tracks',       triple: [2, 3, 5] },
+];
+const PARAMS = ['min', 'mode', 'max'];
+
+function buildDemoControls(){
+  const host = document.getElementById('demoControls');
+  if(!host) return;
+  host.innerHTML = DEMO_TASKS.map(t => `
+    <fieldset class="demo-task" data-key="${t.key}">
+      <div class="task-head"><span class="task-name">${t.label}</span><span class="task-note">${t.note}</span></div>
+      ${PARAMS.map((p, i) => `
+        <div class="demo-row">
+          <label class="p-label" for="${t.key}-${p}">${p}</label>
+          <input type="range" id="${t.key}-${p}" min="1" max="40" step="1"
+                 value="${t.triple[i]}" data-key="${t.key}" data-which="${i}"
+                 aria-label="${t.label} ${p} duration in days" />
+          <span class="p-value" id="${t.key}-${p}-value">${t.triple[i]}</span>
+        </div>`).join('')}
+    </fieldset>`).join('');
+  host.addEventListener('input', onDemoInput);
+}
+
+function onDemoInput(e){
+  const input = e.target;
+  if(input.type !== 'range') return;
+  const key = input.dataset.key, which = Number(input.dataset.which);
+  const task = DEMO_TASKS.find(t => t.key === key);
+  const triple = task.triple.slice();
+  triple[which] = Number(input.value);
+  task.triple = PlanacoMC.clampTriple(triple, which);
+  PARAMS.forEach((p, i) => {
+    document.getElementById(`${key}-${p}`).value = task.triple[i];
+    document.getElementById(`${key}-${p}-value`).textContent = task.triple[i];
+  });
+  scheduleDemo();
+}
+
+let demoPending = false;
+function scheduleDemo(){
+  if(demoPending) return;
+  demoPending = true;
+  requestAnimationFrame(() => { demoPending = false; runDemo(); });
+}
+
+function runDemo(){
+  const svg = document.getElementById('demoHist');
+  if(!svg) return;
+  const tasks = {};
+  DEMO_TASKS.forEach(t => { tasks[t.key] = t.triple; });
+  const samples = PlanacoMC.simulate(tasks, 10000);
+  const s = PlanacoMC.summarize(samples, 26);
+  renderHist(svg, {
+    values: s.counts, xMin: s.min, xMax: s.max, modeIndex: s.modeIndex,
+    marks: [
+      {value: s.p50, color: v('--gold'),  label: 'P50'},
+      {value: s.p85, color: v('--amber'), label: 'P85'},
+      {value: s.p95, color: v('--coral'), label: 'P95'},
+    ],
+  }, {xTicks: [0, 0.25, 0.5, 0.75, 1].map(f => s.min + f * (s.max - s.min))});
+  document.getElementById('statP50').textContent = s.p50.toFixed(1);
+  document.getElementById('statP85').textContent = s.p85.toFixed(1);
+  document.getElementById('statP95').textContent = s.p95.toFixed(1);
+}
+
 function renderAll(){
-  drawHistogram('hist', {compact:false});
   drawHistogram('probHist', {compact:true});
   drawPointEstimate('ptEstimate');
-  drawCDF('cdf');
-  drawDAG('dag');
   renderDists();
+  runDemo();
 }
 
 /* ---- theme toggle ---- */
@@ -259,4 +253,5 @@ document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
   } catch (e) { /* leave the plain GitHub button */ }
 })();
 
+buildDemoControls();
 renderAll();

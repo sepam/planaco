@@ -225,6 +225,28 @@
   .legend span { display: inline-flex; align-items: center; gap: 7px; }
   .legend .sw { width: 12px; height: 12px; border-radius: 3px; }
 
+  /* demo */
+  .demo-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 24px; align-items: start; margin-bottom: 24px; }
+  @media (max-width: 880px) { .demo-grid { grid-template-columns: 1fr; } }
+  .demo-task { border: none; border-top: 1px solid var(--border); padding: 16px 0 6px; margin: 0; }
+  .demo-task:first-of-type { border-top: none; padding-top: 0; }
+  .demo-task .task-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .demo-task .task-name { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px; }
+  .demo-task .task-note { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--text-faint); text-align: right; }
+  .demo-row { display: grid; grid-template-columns: 44px 1fr 30px; gap: 10px; align-items: center; margin: 5px 0; }
+  .demo-row .p-label { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-muted); }
+  .demo-row .p-value { font-family: "JetBrains Mono", monospace; font-size: 12px; text-align: right; }
+  .demo-row input[type="range"] { width: 100%; accent-color: var(--gold-strong); }
+  .demo-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+  .demo-stats .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+  .demo-stats .k { display: block; font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+  .demo-stats .v { font-size: 22px; font-weight: 600; }
+  .demo-stats .p50 .v { color: var(--gold); }
+  .demo-stats .p85 .v { color: var(--amber); }
+  .demo-stats .p95 .v { color: var(--coral); }
+  .demo-hint { color: var(--text-muted); font-size: 14px; margin-top: 14px; }
+  .demo-code { margin-top: 8px; }
+
   /* distributions */
   .dists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   @media (max-width: 880px) { .dists { grid-template-columns: repeat(2, 1fr); } }
