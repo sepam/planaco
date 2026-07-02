@@ -228,13 +228,17 @@ function renderAll(){
 
 /* ---- theme toggle ---- */
 const toggle = document.getElementById('themeToggle');
+function syncToggleIcon(){
+  toggle.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '🌙' : '☀️';
+}
 toggle.addEventListener('click', ()=>{
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
-  toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+  try { localStorage.setItem('theme', next); } catch (e) {}
+  syncToggleIcon();
   renderAll();
 });
+syncToggleIcon();
 
 /* ---- copy ---- */
 document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{

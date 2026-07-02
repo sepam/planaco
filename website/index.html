@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>planaco — Probabilistic Project Planning</title>
 <meta name="description" content="Replace point estimates with honest distributions. Monte Carlo project planning for Python." />
+<script>
+  (function () {
+    var t;
+    try { t = localStorage.getItem("theme"); } catch (e) {}
+    if (t !== "light" && t !== "dark") {
+      t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#f0f6fc" media="(prefers-color-scheme: light)" />
 <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
