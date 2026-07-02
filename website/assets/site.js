@@ -245,4 +245,18 @@ document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
   navigator.clipboard?.writeText(c.dataset.copy); const o=c.textContent; c.textContent='copied'; setTimeout(()=>c.textContent=o,1200);
 }));
 
+/* ---- GitHub stars (fail-silent) ---- */
+(async function loadStars(){
+  try {
+    const r = await fetch('https://api.github.com/repos/sepam/planaco');
+    if (!r.ok) return;
+    const data = await r.json();
+    const n = data.stargazers_count;
+    if (typeof n !== 'number') return;
+    document.getElementById('starCount').textContent =
+      n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n);
+    document.getElementById('starWrap').hidden = false;
+  } catch (e) { /* leave the plain GitHub button */ }
+})();
+
 renderAll();
