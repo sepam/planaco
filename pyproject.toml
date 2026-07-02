@@ -55,7 +55,7 @@ dev = [
 planaco = "planaco.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/sepam/planaco"
+Homepage = "https://sepam.github.io/planaco/"
 Repository = "https://github.com/sepam/planaco"
 
 [tool.setuptools.packages.find]

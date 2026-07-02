@@ -3,285 +3,54 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>planaco — Probabilistic Project Planning</title>
-<meta name="description" content="Replace point estimates with honest distributions. Monte Carlo project planning for Python." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<style>
-  /* ============================================================
-     PLANACO BRAND TOKENS
-     Derived from brand/ assets: navy #0c2a52, gold #e6b94d/#f5d97a,
-     paper #f0f6fc. Dark-first; light values under [data-theme=light].
-     ============================================================ */
-  :root,
-  [data-theme="dark"] {
-    --canvas:        #0a1628;
-    --surface:       #0f2038;
-    --surface-2:     #15294a;
-    --ink:           #0c2a52;
-    --text:          #f0f6fc;
-    --text-muted:    #9fb3c8;
-    --text-faint:    #5d7799;
-    --border:        rgba(240, 246, 252, 0.10);
-    --border-strong: rgba(240, 246, 252, 0.18);
+<title>planaco — Probabilistic Project Planning for Python</title>
+<meta name="description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
+<link rel="canonical" href="https://sepam.github.io/planaco/" />
 
-    --gold:          #f5d97a;
-    --gold-strong:   #e6b94d;
-    --gold-soft:     rgba(245, 217, 122, 0.14);
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="planaco" />
+<meta property="og:title" content="planaco — Probabilistic Project Planning for Python" />
+<meta property="og:description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
+<meta property="og:url" content="https://sepam.github.io/planaco/" />
+<meta property="og:image" content="https://sepam.github.io/planaco/assets/og-card.png" />
+<meta property="og:image:width" content="1280" />
+<meta property="og:image:height" content="640" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="planaco — Probabilistic Project Planning for Python" />
+<meta name="twitter:description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
+<meta name="twitter:image" content="https://sepam.github.io/planaco/assets/og-card.png" />
 
-    --coral:         #f0846b;
-    --amber:         #f0b44d;
-    --teal:          #5ec8c8;
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="assets/favicon-96.png" type="image/png" sizes="96x96" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
 
-    /* chart-specific */
-    --chart-bar:        #3a5a8c;
-    --chart-bar-stroke: #5d82bb;
-    --chart-grid:       rgba(240, 246, 252, 0.07);
-    --chart-axis:       rgba(240, 246, 252, 0.30);
-
-    --shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.6);
-  }
-
-  [data-theme="light"] {
-    --canvas:        #f0f6fc;
-    --surface:       #ffffff;
-    --surface-2:     #e8f0f9;
-    --ink:           #0c2a52;
-    --text:          #0c2a52;
-    --text-muted:    #4f6a8a;
-    --text-faint:    #8298b2;
-    --border:        rgba(12, 42, 82, 0.12);
-    --border-strong: rgba(12, 42, 82, 0.20);
-
-    --gold:          #e6b94d;
-    --gold-strong:   #c99a2e;
-    --gold-soft:     rgba(230, 185, 77, 0.18);
-
-    --coral:         #d96b4f;
-    --amber:         #d99a2e;
-    --teal:          #2a9d9d;
-
-    --chart-bar:        #2a4a7c;
-    --chart-bar-stroke: #1c3a66;
-    --chart-grid:       rgba(12, 42, 82, 0.08);
-    --chart-axis:       rgba(12, 42, 82, 0.28);
-
-    --shadow: 0 10px 36px -14px rgba(12, 42, 82, 0.22);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--canvas);
-    color: var(--text);
-    font-family: "Inter", system-ui, sans-serif;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    transition: background 0.3s ease, color 0.3s ease;
-    overflow-x: hidden;
-  }
-
-  h1, h2, h3, .display {
-    font-family: "Space Grotesk", "Helvetica Neue", sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-  }
-
-  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
-
-  a { color: inherit; text-decoration: none; }
-
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-
-  .accent { color: var(--gold); }
-  .muted { color: var(--text-muted); }
-
-  /* ---------- NAV ---------- */
-  nav {
-    position: sticky; top: 0; z-index: 50;
-    backdrop-filter: blur(12px);
-    background: color-mix(in srgb, var(--canvas) 80%, transparent);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner {
-    display: flex; align-items: center; justify-content: space-between;
-    height: 64px;
-  }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand .logo { width: 32px; height: 32px; }
-  .brand .word {
-    font-family: "Space Grotesk", sans-serif; font-weight: 700;
-    font-size: 22px; letter-spacing: -0.03em;
-  }
-  .nav-links { display: flex; align-items: center; gap: 28px; }
-  .nav-links a { color: var(--text-muted); font-size: 14px; font-weight: 500; transition: color .2s; }
-  .nav-links a:hover { color: var(--text); }
-  .nav-cta {
-    background: var(--gold); color: #0a1628 !important;
-    padding: 8px 16px; border-radius: 8px; font-weight: 600 !important;
-    font-size: 14px;
-  }
-  .nav-cta:hover { background: var(--gold-strong); }
-  .toggle {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px; border-radius: 8px;
-    border: 1px solid var(--border-strong); background: transparent;
-    color: var(--text); cursor: pointer; font-size: 16px;
-    transition: background .2s, border-color .2s;
-  }
-  .toggle:hover { background: var(--surface); }
-
-  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
-
-  /* ---------- HERO ---------- */
-  .hero { position: relative; padding: 96px 0 72px; overflow: hidden; }
-  .hero-grid {
-    position: absolute; inset: 0; z-index: 0; pointer-events: none;
-    background-image:
-      linear-gradient(var(--chart-grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--chart-grid) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
-  }
-  .hero-inner { position: relative; z-index: 1; max-width: 760px; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 13px; font-weight: 500; color: var(--text-muted);
-    border: 1px solid var(--border-strong); border-radius: 999px;
-    padding: 6px 14px; margin-bottom: 28px;
-  }
-  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
-  .hero h1 { font-size: clamp(42px, 7vw, 72px); margin-bottom: 22px; }
-  .hero h1 .accent { color: var(--gold); }
-  .hero .sub {
-    font-size: clamp(18px, 2.4vw, 22px); color: var(--text-muted);
-    max-width: 620px; margin-bottom: 36px;
-  }
-  .hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .install {
-    display: inline-flex; align-items: center; gap: 12px;
-    background: var(--surface); border: 1px solid var(--border-strong);
-    border-radius: 10px; padding: 13px 18px;
-    font-family: "JetBrains Mono", monospace; font-size: 15px;
-  }
-  .install .prompt { color: var(--gold); }
-  .install .copy { color: var(--text-faint); font-size: 13px; cursor: pointer; }
-  .install .copy:hover { color: var(--text); }
-  .btn-primary {
-    background: var(--gold); color: #0a1628;
-    padding: 14px 24px; border-radius: 10px; font-weight: 600; font-size: 15px;
-    transition: transform .15s, background .2s;
-  }
-  .btn-primary:hover { background: var(--gold-strong); transform: translateY(-1px); }
-
-  /* ---------- SECTIONS ---------- */
-  section { padding: 80px 0; }
-  .section-tag {
-    font-family: "JetBrains Mono", monospace; font-size: 13px;
-    color: var(--gold-strong); text-transform: uppercase; letter-spacing: .12em;
-    margin-bottom: 14px;
-  }
-  .section-head { max-width: 640px; margin-bottom: 48px; }
-  .section-head h2 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 14px; }
-  .section-head p { color: var(--text-muted); font-size: 18px; }
-
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 28px;
-  }
-
-  /* problem: before/after */
-  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 760px) { .compare { grid-template-columns: 1fr; } }
-  .compare .label { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-weight: 600; }
-  .compare .pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 6px; font-family: "JetBrains Mono", monospace; }
-  .pill.bad { color: var(--coral); background: color-mix(in srgb, var(--coral) 16%, transparent); }
-  .pill.good { color: var(--gold-strong); background: var(--gold-soft); }
-  .compare .takeaway { color: var(--text-muted); font-size: 14px; margin-top: 16px; }
-
-  /* steps */
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
-  .step .num {
-    font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px;
-    width: 38px; height: 38px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--gold-soft); color: var(--gold-strong); margin-bottom: 18px;
-  }
-  .step h3 { font-size: 19px; margin-bottom: 8px; }
-  .step p { color: var(--text-muted); font-size: 15px; }
-
-  /* chart showcase */
-  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 880px) { .charts { grid-template-columns: 1fr; } }
-  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
-  .chart-card.full { grid-column: 1 / -1; }
-  .chart-card h3 { font-size: 18px; margin-bottom: 4px; }
-  .chart-card .desc { color: var(--text-muted); font-size: 14px; margin-bottom: 18px; }
-  .chart-card svg { width: 100%; height: auto; display: block; }
-  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
-  .legend span { display: inline-flex; align-items: center; gap: 7px; }
-  .legend .sw { width: 12px; height: 12px; border-radius: 3px; }
-
-  /* distributions */
-  .dists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-  @media (max-width: 880px) { .dists { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 540px) { .dists { grid-template-columns: 1fr; } }
-  .dist {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 20px; transition: border-color .2s, transform .15s;
-  }
-  .dist:hover { border-color: var(--gold-strong); transform: translateY(-2px); }
-  .dist h4 { font-family: "Space Grotesk", sans-serif; font-size: 16px; margin-bottom: 2px; }
-  .dist .when { color: var(--text-faint); font-size: 12px; margin-bottom: 14px; font-family: "JetBrains Mono", monospace; }
-  .dist svg { width: 100%; height: 56px; display: block; }
-
-  /* style system */
-  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
-  @media (max-width: 760px) { .swatches { grid-template-columns: repeat(2, 1fr); } }
-  .swatch { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .swatch .chip { height: 72px; }
-  .swatch .meta { padding: 12px 14px; }
-  .swatch .name { font-size: 13px; font-weight: 600; }
-  .swatch .hex { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-muted); }
-
-  .type-rows { display: flex; flex-direction: column; gap: 18px; }
-  .type-row { display: flex; align-items: baseline; gap: 20px; border-bottom: 1px solid var(--border); padding-bottom: 18px; }
-  .type-row .tag { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-muted); width: 130px; flex-shrink: 0; }
-
-  /* code example */
-  .code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
-  @media (max-width: 820px) { .code-grid { grid-template-columns: 1fr; } }
-  .code-block {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; overflow: hidden;
-  }
-  .code-block .bar {
-    display: flex; align-items: center; gap: 8px; padding: 12px 16px;
-    border-bottom: 1px solid var(--border); font-family: "JetBrains Mono", monospace;
-    font-size: 12px; color: var(--text-muted);
-  }
-  .code-block .bar .dotr { width: 11px; height: 11px; border-radius: 50%; }
-  .code-block pre { padding: 20px; overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 13px; line-height: 1.7; }
-  .tok-key { color: var(--gold); }
-  .tok-str { color: var(--teal); }
-  .tok-num { color: var(--coral); }
-  .tok-com { color: var(--text-faint); }
-  .stat-line { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--border); }
-  .stat-line .v { color: var(--gold); font-weight: 500; }
-
-  /* footer */
-  footer { border-top: 1px solid var(--border); padding: 48px 0; color: var(--text-muted); }
-  .foot-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-  .foot-links { display: flex; gap: 24px; font-size: 14px; }
-  .foot-links a:hover { color: var(--text); }
-
-  .badge { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: 3px 8px; }
-</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "planaco",
+  "description": "Probabilistic project planning for Python: model tasks as distributions and estimate completion with Monte Carlo simulation.",
+  "url": "https://sepam.github.io/planaco/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "OS Independent",
+  "programmingLanguage": "Python",
+  "license": "https://github.com/sepam/planaco/blob/master/LICENSE.md",
+  "sameAs": ["https://github.com/sepam/planaco", "https://pypi.org/project/planaco/"]
+}
+</script>
+<script>
+  (function () {
+    var t;
+    try { t = localStorage.getItem("theme"); } catch (e) {}
+    if (t !== "light" && t !== "dark") {
+      t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#f0f6fc" media="(prefers-color-scheme: light)" />
+<link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
 
@@ -302,12 +71,12 @@
     </a>
     <div class="nav-links">
       <a href="#problem">Why</a>
+      <a href="#demo">Demo</a>
       <a href="#how">How it works</a>
-      <a href="#charts">Visuals</a>
+      <a href="#code">Code</a>
       <a href="#distributions">Distributions</a>
-      <a href="#style">Style</a>
       <button class="toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
-      <a class="nav-cta" href="#">GitHub</a>
+      <a class="nav-cta" href="https://github.com/sepam/planaco">GitHub<span id="starWrap" hidden> · ★ <span id="starCount"></span></span></a>
     </div>
   </div>
 </nav>
@@ -316,19 +85,26 @@
 <header class="hero" id="top">
   <div class="hero-grid"></div>
   <div class="wrap hero-inner">
-    <span class="eyebrow"><span class="dot"></span> Monte Carlo project estimation · Python · alpha</span>
-    <h1>Stop guessing dates.<br/>Plan with <span class="accent">distributions</span>.</h1>
-    <p class="sub">Planaco models every task as a probability distribution and runs thousands of Monte Carlo simulations — so you ship honest confidence ranges instead of a single optimistic number.</p>
-    <div class="hero-actions">
-      <a class="btn-primary" href="#how">See how it works</a>
-      <div class="install">
-        <span class="prompt">$</span>
-        <span>pip install planaco</span>
-        <span class="copy" data-copy="pip install planaco">copy</span>
+    <div class="hero-copy">
+      <span class="eyebrow"><span class="dot"></span> Monte Carlo project estimation · Python · alpha</span>
+      <h1>Stop guessing dates.<br/>Plan with <span class="accent">distributions</span>.</h1>
+      <p class="sub">Planaco models every task as a probability distribution and runs thousands of Monte Carlo simulations — so you ship honest confidence ranges instead of a single optimistic number.</p>
+      <div class="hero-actions">
+        <div class="install">
+          <span class="prompt">$</span>
+          <span>pip install planaco</span>
+          <button type="button" class="copy" data-copy="pip install planaco">copy</button>
+        </div>
+        <a class="btn-primary" href="https://github.com/sepam/planaco">View on GitHub</a>
       </div>
+    </div>
+    <div class="hero-chart" aria-hidden="true">
+      <svg id="heroHist" viewBox="0 0 560 320"></svg>
     </div>
   </div>
 </header>
+
+<main>
 
 <!-- ===================== PROBLEM ===================== -->
 <section id="problem">
@@ -353,8 +129,46 @@
   </div>
 </section>
 
+<!-- ===================== DEMO ===================== -->
+<section id="demo" style="background: var(--surface);">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-tag">Live demo</div>
+      <h2>Try it. No install needed.</h2>
+      <p>Four tasks, real dependencies. Every drag runs a fresh 10,000-trial Monte Carlo — this is exactly what planaco does.</p>
+    </div>
+    <div class="demo-grid">
+      <div class="card demo-controls" id="demoControls">
+        <!-- fieldsets generated by site.js from the TASKS config -->
+      </div>
+      <div class="demo-output">
+        <div class="chart-card">
+          <h3>Project completion</h3>
+          <div class="desc">10,000 simulations · days to completion</div>
+          <svg id="demoHist" viewBox="0 0 520 300" aria-label="Live histogram of simulated completion times"></svg>
+        </div>
+        <div class="demo-stats" aria-live="polite">
+          <div class="stat p50"><span class="k">P50 · days</span><span class="v mono" id="statP50">—</span></div>
+          <div class="stat p85"><span class="k">P85 · days</span><span class="v mono" id="statP85">—</span></div>
+          <div class="stat p95"><span class="k">P95 · days</span><span class="v mono" id="statP95">—</span></div>
+        </div>
+        <p class="demo-hint">Widen Backend&rsquo;s max — watch P95 slip while P50 barely moves.</p>
+      </div>
+    </div>
+    <div class="code-block demo-code">
+      <div class="bar"><span class="dotr" style="background:var(--coral)"></span><span class="dotr" style="background:var(--amber)"></span><span class="dotr" style="background:var(--teal)"></span> &nbsp;the same model, in planaco</div>
+<pre><span class="tok-key">project</span> = Project(name=<span class="tok-str">"Web App"</span>, unit=<span class="tok-str">"days"</span>)
+project.add_task(design)                              <span class="tok-com"># 5 · 7 · 14</span>
+project.add_task(frontend, depends_on=[design])       <span class="tok-com"># 8 · 12 · 15</span>
+project.add_task(backend,  depends_on=[design])       <span class="tok-com"># 10 · 15 · 25</span>
+project.add_task(testing,  depends_on=[frontend, backend])
+project.statistics(n=<span class="tok-num">10_000</span>)   <span class="tok-com"># → P50, P85, P95</span></pre>
+    </div>
+  </div>
+</section>
+
 <!-- ===================== HOW ===================== -->
-<section id="how" style="background: var(--surface);">
+<section id="how">
   <div class="wrap">
     <div class="section-head">
       <div class="section-tag">How it works</div>
@@ -380,82 +194,6 @@
   </div>
 </section>
 
-<!-- ===================== CHARTS ===================== -->
-<section id="charts">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">On-brand visuals</div>
-      <h2>Every chart speaks the same language</h2>
-      <p>Navy bars, a gold <em>mode</em> bar echoing the logo, and percentile markers that warm from gold to coral as risk climbs.</p>
-    </div>
-    <div class="charts">
-      <div class="chart-card full">
-        <h3>Project completion — histogram</h3>
-        <div class="desc">10,000 simulations · days to completion</div>
-        <svg id="hist" viewBox="0 0 820 380"></svg>
-        <div class="legend">
-          <span><span class="sw" style="background: var(--chart-bar)"></span> simulated outcomes</span>
-          <span><span class="sw" style="background: var(--gold)"></span> mode (most likely)</span>
-          <span><span class="sw" style="background: var(--gold)"></span> P50</span>
-          <span><span class="sw" style="background: var(--amber)"></span> P85</span>
-          <span><span class="sw" style="background: var(--coral)"></span> P95</span>
-        </div>
-      </div>
-      <div class="chart-card">
-        <h3>Cumulative probability</h3>
-        <div class="desc">“What's the chance we finish by day X?”</div>
-        <svg id="cdf" viewBox="0 0 400 320"></svg>
-      </div>
-      <div class="chart-card">
-        <h3>Dependency &amp; critical path</h3>
-        <div class="desc">Gold nodes drive the timeline</div>
-        <svg id="dag" viewBox="0 0 400 320"></svg>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== DISTRIBUTIONS ===================== -->
-<section id="distributions" style="background: var(--surface);">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">Six distributions</div>
-      <h2>Pick the shape that fits the uncertainty</h2>
-    </div>
-    <div class="dists" id="dists"></div>
-  </div>
-</section>
-
-<!-- ===================== STYLE SYSTEM ===================== -->
-<section id="style">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">Brand &amp; style system</div>
-      <h2>The tokens behind everything above</h2>
-      <p>One palette and three typefaces, applied consistently across the site, the docs, and the library's SVG chart output.</p>
-    </div>
-
-    <h3 style="font-size:15px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:18px; font-family:'JetBrains Mono',monospace;">Core palette</h3>
-    <div class="swatches">
-      <div class="swatch"><div class="chip" style="background:#0c2a52"></div><div class="meta"><div class="name">Ink / Navy</div><div class="hex">#0c2a52</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#0a1628"></div><div class="meta"><div class="name">Canvas (dark)</div><div class="hex">#0a1628</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#f5d97a"></div><div class="meta"><div class="name">Gold (on dark)</div><div class="hex">#f5d97a</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#e6b94d"></div><div class="meta"><div class="name">Gold (on light)</div><div class="hex">#e6b94d</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#f0f6fc; border-bottom:1px solid var(--border)"></div><div class="meta"><div class="name">Paper</div><div class="hex">#f0f6fc</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#f0b44d"></div><div class="meta"><div class="name">Amber · P85</div><div class="hex">#f0b44d</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#f0846b"></div><div class="meta"><div class="name">Coral · P95 / risk</div><div class="hex">#f0846b</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#5ec8c8"></div><div class="meta"><div class="name">Teal · secondary</div><div class="hex">#5ec8c8</div></div></div>
-    </div>
-
-    <h3 style="font-size:15px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:18px; font-family:'JetBrains Mono',monospace;">Typography</h3>
-    <div class="card type-rows">
-      <div class="type-row"><span class="tag">Space Grotesk<br/>display / 700</span><span class="display" style="font-size:34px;">Plan with distributions</span></div>
-      <div class="type-row"><span class="tag">Inter<br/>body / 400–600</span><span style="font-size:18px; color:var(--text-muted);">Honest confidence ranges, not a single optimistic number that everyone quietly distrusts.</span></div>
-      <div class="type-row"><span class="tag">JetBrains Mono<br/>code / 400–500</span><span class="mono" style="font-size:16px;">project.statistics(n=10000)["percentiles"]["p85"]</span></div>
-    </div>
-  </div>
-</section>
-
 <!-- ===================== CODE ===================== -->
 <section id="code" style="background: var(--surface);">
   <div class="wrap">
@@ -463,11 +201,36 @@
       <div class="section-tag">From YAML to forecast</div>
       <h2>Define it once, simulate forever</h2>
     </div>
-    <div class="code-grid">
-      <div class="code-block">
-        <div class="bar"><span class="dotr" style="background:var(--coral)"></span><span class="dotr" style="background:var(--amber)"></span><span class="dotr" style="background:var(--teal)"></span> &nbsp;project.yaml</div>
-<pre><span class="tok-key">project:</span>
-  <span class="tok-key">name:</span> <span class="tok-str">"Website Redesign"</span>
+    <div class="tabs-card">
+      <div class="tabs" role="tablist" aria-label="Code examples">
+        <button class="tab" role="tab" id="tab-python" aria-controls="panel-python" aria-selected="true">Python</button>
+        <button class="tab" role="tab" id="tab-yaml" aria-controls="panel-yaml" aria-selected="false" tabindex="-1">YAML + CLI</button>
+        <button class="tab" role="tab" id="tab-output" aria-controls="panel-output" aria-selected="false" tabindex="-1">Output</button>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-python" aria-labelledby="tab-python">
+<pre><span class="tok-key">from</span> planaco <span class="tok-key">import</span> Task, Project
+
+project = Project(name=<span class="tok-str">"Web App"</span>, unit=<span class="tok-str">"days"</span>)
+
+design   = Task(name=<span class="tok-str">"Design"</span>,   min_duration=<span class="tok-num">5</span>,  mode_duration=<span class="tok-num">7</span>,  max_duration=<span class="tok-num">14</span>)
+frontend = Task(name=<span class="tok-str">"Frontend"</span>, min_duration=<span class="tok-num">8</span>,  mode_duration=<span class="tok-num">12</span>, max_duration=<span class="tok-num">15</span>)
+backend  = Task(name=<span class="tok-str">"Backend"</span>,  min_duration=<span class="tok-num">10</span>, mode_duration=<span class="tok-num">15</span>, max_duration=<span class="tok-num">25</span>)
+testing  = Task(name=<span class="tok-str">"Testing"</span>,  min_duration=<span class="tok-num">2</span>,  mode_duration=<span class="tok-num">3</span>,  max_duration=<span class="tok-num">5</span>)
+
+project.add_task(design)
+project.add_task(frontend, depends_on=[design])
+project.add_task(backend,  depends_on=[design])
+project.add_task(testing,  depends_on=[frontend, backend])
+
+stats = project.statistics(n=<span class="tok-num">10_000</span>)
+<span class="tok-key">print</span>(stats[<span class="tok-str">"percentiles"</span>][<span class="tok-str">"p85"</span>])</pre>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-yaml" aria-labelledby="tab-yaml" hidden>
+<pre><span class="tok-com"># project.yaml — then: planaco stats project.yaml</span>
+<span class="tok-key">project:</span>
+  <span class="tok-key">name:</span> <span class="tok-str">"Web App"</span>
   <span class="tok-key">unit:</span> <span class="tok-str">days</span>
   <span class="tok-key">seed:</span> <span class="tok-num">42</span>
 
@@ -484,15 +247,44 @@
     <span class="tok-key">max_duration:</span> <span class="tok-num">25</span>
     <span class="tok-key">depends_on:</span> [<span class="tok-str">design</span>]</pre>
       </div>
-      <div class="code-block">
-        <div class="bar"><span class="dotr" style="background:var(--coral)"></span><span class="dotr" style="background:var(--amber)"></span><span class="dotr" style="background:var(--teal)"></span> &nbsp;$ planaco stats project.yaml</div>
-        <pre><span class="tok-com"># Website Redesign — 10,000 sims</span>
+
+      <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output" hidden>
+        <pre><span class="tok-com"># Web App — 10,000 sims</span>
 
 <div class="stat-line"><span>Mean</span><span class="v">24.3 days</span></div><div class="stat-line"><span>Median (P50)</span><span class="v">24.0 days</span></div><div class="stat-line"><span>Std dev</span><span class="v">3.1 days</span></div><div class="stat-line"><span>P85</span><span class="v">27.4 days</span></div><div class="stat-line"><span>P95</span><span class="v">29.8 days</span></div><div class="stat-line" style="border:none"><span>95% CI</span><span class="v">[18.2, 30.4]</span></div></pre>
       </div>
     </div>
   </div>
 </section>
+
+<!-- ===================== DISTRIBUTIONS ===================== -->
+<section id="distributions">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-tag">Six distributions</div>
+      <h2>Pick the shape that fits the uncertainty</h2>
+    </div>
+    <div class="dists" id="dists"></div>
+  </div>
+</section>
+
+<!-- ===================== GET STARTED ===================== -->
+<section id="get-started" style="background: var(--surface);">
+  <div class="wrap cta-inner">
+    <h2>Ship a range you can stand behind.</h2>
+    <div class="install big">
+      <span class="prompt">$</span>
+      <span>pip install planaco</span>
+      <button type="button" class="copy" data-copy="pip install planaco">copy</button>
+    </div>
+    <div class="cta-links">
+      <a class="btn-primary" href="https://github.com/sepam/planaco">GitHub</a>
+      <a class="btn-ghost" href="https://pypi.org/project/planaco/">PyPI</a>
+    </div>
+  </div>
+</section>
+
+</main>
 
 <!-- ===================== FOOTER ===================== -->
 <footer>
@@ -510,256 +302,15 @@
       <span class="muted" style="font-size:14px;">© 2026 planaco · MIT licensed</span>
     </div>
     <div class="foot-links">
-      <a href="#">GitHub</a><a href="#">PyPI</a><a href="#">Docs</a><a href="#style">Style guide</a>
+      <a href="https://github.com/sepam/planaco">GitHub</a>
+      <a href="https://pypi.org/project/planaco/">PyPI</a>
+      <a href="https://github.com/sepam/planaco/blob/master/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/sepam/planaco/blob/master/LICENSE.md">License</a>
     </div>
   </div>
 </footer>
 
-<script>
-/* ============================================================
-   Chart rendering — reads brand tokens from CSS so charts
-   re-theme on light/dark toggle. Mockup data is illustrative.
-   ============================================================ */
-const SVGNS = "http://www.w3.org/2000/svg";
-function v(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-function el(tag, attrs){ const e = document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
-
-// Bell-ish histogram heights (0-100), modeIndex marks the gold bar.
-const HEIGHTS = [2,4,7,12,20,30,43,58,72,85,95,100,96,88,76,63,50,38,28,20,13,8,5,3,2,1];
-const X_MIN = 14, X_MAX = 30, MODE_INDEX = 11;
-
-function percentileIndex(p){
-  const total = HEIGHTS.reduce((a,b)=>a+b,0);
-  let cum = 0;
-  for(let i=0;i<HEIGHTS.length;i++){ cum += HEIGHTS[i]; if(cum/total >= p) return i; }
-  return HEIGHTS.length-1;
-}
-
-function drawHistogram(id, opts){
-  const svg = document.getElementById(id);
-  if(!svg) return;
-  svg.innerHTML = "";
-  const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
-  const padL = opts.compact ? 8 : 48, padR = opts.compact ? 8 : 20;
-  const padT = 18, padB = opts.compact ? 14 : 38;
-  const plotW = W - padL - padR, plotH = H - padT - padB, base = padT + plotH;
-  const step = plotW / HEIGHTS.length, bw = step * 0.78;
-
-  const bar = v('--chart-bar'), barStroke = v('--chart-bar-stroke'), gold = v('--gold');
-  const grid = v('--chart-grid'), axis = v('--chart-axis'), muted = v('--text-muted');
-
-  // gridlines
-  if(!opts.compact){
-    for(let g=0; g<=4; g++){
-      const y = padT + plotH*(g/4);
-      svg.appendChild(el('line',{x1:padL,y1:y,x2:padL+plotW,y2:y,stroke:grid,'stroke-width':1}));
-    }
-  }
-  // bars
-  HEIGHTS.forEach((h,i)=>{
-    const x = padL + i*step + (step-bw)/2;
-    const bh = plotH * h/100;
-    const r = el('rect',{x:x, y:base-bh, width:bw, height:bh, rx:1.5,
-      fill: i===MODE_INDEX ? gold : bar,
-      stroke: i===MODE_INDEX ? gold : barStroke, 'stroke-width':1});
-    svg.appendChild(r);
-  });
-  // axis baseline
-  svg.appendChild(el('line',{x1:padL,y1:base,x2:padL+plotW,y2:base,stroke:axis,'stroke-width':1}));
-
-  if(opts.compact) return;
-
-  // x labels
-  [14,18,22,26,30].forEach(val=>{
-    const frac = (val - X_MIN)/(X_MAX - X_MIN);
-    const x = padL + frac*plotW;
-    const t = el('text',{x:x, y:base+22, fill:muted, 'font-size':12, 'text-anchor':'middle', 'font-family':'JetBrains Mono, monospace'});
-    t.textContent = val; svg.appendChild(t);
-  });
-  // percentile markers
-  const marks = [{p:0.50,c:v('--gold'),l:'P50'},{p:0.85,c:v('--amber'),l:'P85'},{p:0.95,c:v('--coral'),l:'P95'}];
-  marks.forEach(m=>{
-    const idx = percentileIndex(m.p);
-    const x = padL + (idx+0.5)*step;
-    svg.appendChild(el('line',{x1:x,y1:padT,x2:x,y2:base,stroke:m.c,'stroke-width':2,'stroke-dasharray':'5 4'}));
-    const lbl = el('text',{x:x+6,y:padT+13,fill:m.c,'font-size':12,'font-weight':600,'font-family':'JetBrains Mono, monospace'});
-    lbl.textContent = m.l; svg.appendChild(lbl);
-  });
-}
-
-function drawPointEstimate(id){
-  const svg = document.getElementById(id);
-  if(!svg) return;
-  svg.innerHTML = "";
-  const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
-  const padL=8, padR=8, padT=18, padB=14;
-  const plotW=W-padL-padR, plotH=H-padT-padB, base=padT+plotH;
-  const axis=v('--chart-axis'), coral=v('--coral'), muted=v('--text-muted');
-  // single lonely bar at the "21 days" position (mode index), full height
-  const step = plotW / HEIGHTS.length, bw = step*0.78;
-  const x = padL + MODE_INDEX*step + (step-bw)/2;
-  svg.appendChild(el('rect',{x:x, y:padT, width:bw, height:plotH, rx:1.5, fill:coral, opacity:0.85}));
-  const lbl=el('text',{x:x+bw/2, y:padT-4, fill:coral, 'font-size':12, 'font-weight':600, 'text-anchor':'middle', 'font-family':'JetBrains Mono, monospace'});
-  lbl.textContent='21'; svg.appendChild(lbl);
-  svg.appendChild(el('line',{x1:padL,y1:base,x2:padL+plotW,y2:base,stroke:axis,'stroke-width':1}));
-}
-
-function drawCDF(id){
-  const svg = document.getElementById(id);
-  svg.innerHTML = "";
-  const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
-  const padL = 38, padR = 16, padT = 16, padB = 34;
-  const plotW = W-padL-padR, plotH = H-padT-padB, base = padT+plotH;
-  const total = HEIGHTS.reduce((a,b)=>a+b,0);
-  const text = v('--text'), gold = v('--gold'), grid = v('--chart-grid'), axis = v('--chart-axis'), muted = v('--text-muted');
-
-  // gridlines + y labels
-  [0,0.25,0.5,0.75,1].forEach(q=>{
-    const y = base - plotH*q;
-    svg.appendChild(el('line',{x1:padL,y1:y,x2:padL+plotW,y2:y,stroke:grid,'stroke-width':1}));
-    const t = el('text',{x:padL-8,y:y+4,fill:muted,'font-size':11,'text-anchor':'end','font-family':'JetBrains Mono, monospace'});
-    t.textContent = q.toFixed(1); svg.appendChild(t);
-  });
-
-  // build cumulative points
-  let cum = 0; const pts = [];
-  HEIGHTS.forEach((h,i)=>{ cum += h; const x = padL + (i+0.5)/HEIGHTS.length*plotW; const y = base - (cum/total)*plotH; pts.push([x,y]); });
-
-  // area
-  let d = `M ${padL} ${base} `;
-  pts.forEach(p=> d += `L ${p[0].toFixed(1)} ${p[1].toFixed(1)} `);
-  d += `L ${padL+plotW} ${base} Z`;
-  svg.appendChild(el('path',{d:d, fill:'var(--gold-soft)'}));
-  // line
-  let dl = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} `;
-  pts.slice(1).forEach(p=> dl += `L ${p[0].toFixed(1)} ${p[1].toFixed(1)} `);
-  svg.appendChild(el('path',{d:dl, fill:'none', stroke:gold, 'stroke-width':2.5, 'stroke-linejoin':'round'}));
-
-  // P85 guide
-  const idx = percentileIndex(0.85), px = padL + (idx+0.5)/HEIGHTS.length*plotW;
-  svg.appendChild(el('line',{x1:px,y1:padT,x2:px,y2:base,stroke:v('--amber'),'stroke-width':1.5,'stroke-dasharray':'4 4'}));
-  svg.appendChild(el('line',{x1:padL,y1:base-0.85*plotH,x2:px,y2:base-0.85*plotH,stroke:v('--amber'),'stroke-width':1.5,'stroke-dasharray':'4 4'}));
-  const dot = el('circle',{cx:px,cy:base-0.85*plotH,r:4,fill:v('--amber')}); svg.appendChild(dot);
-
-  svg.appendChild(el('line',{x1:padL,y1:base,x2:padL+plotW,y2:base,stroke:axis,'stroke-width':1}));
-  [16,20,24,28].forEach(val=>{
-    const frac=(val-X_MIN)/(X_MAX-X_MIN), x=padL+frac*plotW;
-    const t=el('text',{x:x,y:base+20,fill:muted,'font-size':11,'text-anchor':'middle','font-family':'JetBrains Mono, monospace'});
-    t.textContent=val; svg.appendChild(t);
-  });
-}
-
-function drawDAG(id){
-  const svg = document.getElementById(id);
-  svg.innerHTML = "";
-  const text=v('--text'), gold=v('--gold'), bar=v('--chart-bar'), stroke=v('--chart-bar-stroke'), muted=v('--text-muted'), canvas=v('--canvas');
-  // nodes: [x,y,label,dur,critical]
-  const N = {
-    design:   [56, 140, 'Design', '5–7–14', true],
-    frontend: [190, 70, 'Frontend','8–12–15', false],
-    backend:  [190, 210,'Backend', '10–15–25', true],
-    test:     [300, 140, 'Testing','2–3–5', true],
-  };
-  const edges = [['design','frontend',false],['design','backend',true],['frontend','test',false],['backend','test',true]];
-  const nw=86, nh=48;
-  // edges
-  edges.forEach(([a,b,crit])=>{
-    const [ax,ay]=N[a], [bx,by]=N[b];
-    const x1=ax+nw/2, y1=ay, x2=bx-nw/2, y2=by;
-    svg.appendChild(el('path',{d:`M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`,
-      fill:'none', stroke: crit?gold:stroke, 'stroke-width': crit?2.5:1.5, 'marker-end':`url(#arrow-${crit?'g':'n'})`, opacity: crit?1:0.6}));
-  });
-  // arrow markers
-  const defs = el('defs',{});
-  [['arrow-g',gold],['arrow-n',stroke]].forEach(([mid,col])=>{
-    const m = el('marker',{id:mid,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'});
-    m.appendChild(el('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:col}));
-    defs.appendChild(m);
-  });
-  svg.appendChild(defs);
-  // nodes
-  for(const k in N){
-    const [x,y,label,dur,crit]=N[k];
-    const g = el('g',{});
-    g.appendChild(el('rect',{x:x-nw/2,y:y-nh/2,width:nw,height:nh,rx:10,
-      fill: crit ? 'var(--gold-soft)' : v('--surface-2'),
-      stroke: crit?gold:stroke, 'stroke-width': crit?2:1.5}));
-    const t1=el('text',{x:x,y:y-2,fill:text,'font-size':13,'font-weight':600,'text-anchor':'middle','font-family':'Space Grotesk, sans-serif'});
-    t1.textContent=label; g.appendChild(t1);
-    const t2=el('text',{x:x,y:y+14,fill:muted,'font-size':10,'text-anchor':'middle','font-family':'JetBrains Mono, monospace'});
-    t2.textContent=dur; g.appendChild(t2);
-    svg.appendChild(g);
-  }
-  // caption
-  const c=el('text',{x:200,y:290,fill:muted,'font-size':11,'text-anchor':'middle','font-family':'JetBrains Mono, monospace'});
-  c.textContent='gold = on critical path'; svg.appendChild(c);
-}
-
-/* ---- distribution sparklines ---- */
-function pdfSamples(kind){
-  const n=60, xs=[]; for(let i=0;i<n;i++) xs.push(i/(n-1));
-  const f = {
-    triangular: x=>{ const a=0.1,m=0.45,b=0.95; if(x<a||x>b) return 0; return x<m ? (x-a)/(m-a) : (b-x)/(b-m); },
-    pert:       x=>Math.pow(x,2.2)*Math.pow(1-x,1.6),
-    uniform:    x=> (x>0.15 && x<0.85) ? 1 : (x>0.1&&x<0.9?0.5:0),
-    normal:     x=>Math.exp(-Math.pow((x-0.5)/0.16,2)/2),
-    lognormal:  x=>{ if(x<=0.02) return 0; const t=(x)*3; return Math.exp(-Math.pow(Math.log(t)+0.2,2)/(2*0.45*0.45))/t; },
-    beta:       x=>Math.pow(x,1.6)*Math.pow(1-x,3.2),
-  }[kind];
-  const ys = xs.map(f); const mx=Math.max(...ys)||1; return ys.map(y=>y/mx);
-}
-function sparkSVG(kind){
-  const W=240,H=56,pad=4, plotH=H-pad*2;
-  const ys=pdfSamples(kind);
-  let d=`M ${pad} ${H-pad} `;
-  ys.forEach((y,i)=>{ const x=pad+i/(ys.length-1)*(W-pad*2); d+=`L ${x.toFixed(1)} ${(H-pad-y*plotH).toFixed(1)} `; });
-  d+=`L ${W-pad} ${H-pad} Z`;
-  // mode dot
-  let mi=0; ys.forEach((y,i)=>{ if(y>=ys[mi]) mi=i; });
-  const mx=pad+mi/(ys.length-1)*(W-pad*2), my=H-pad-ys[mi]*plotH;
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-    <path d="${d}" fill="var(--gold-soft)" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/>
-    <circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="3.5" fill="var(--gold)"/>
-  </svg>`;
-}
-const DISTS = [
-  ['Triangular','min · mode · max','triangular'],
-  ['PERT','smooth, mode-weighted','pert'],
-  ['Uniform','equal across range','uniform'],
-  ['Normal','symmetric bell','normal'],
-  ['LogNormal','right-skewed delays','lognormal'],
-  ['Beta','custom shape','beta'],
-];
-function renderDists(){
-  document.getElementById('dists').innerHTML = DISTS.map(([n,w,k])=>
-    `<div class="dist"><h4>${n}</h4><div class="when">${w}</div>${sparkSVG(k)}</div>`).join('');
-}
-
-function renderAll(){
-  drawHistogram('hist', {compact:false});
-  drawHistogram('probHist', {compact:true});
-  drawPointEstimate('ptEstimate');
-  drawCDF('cdf');
-  drawDAG('dag');
-  renderDists();
-}
-
-/* ---- theme toggle ---- */
-const toggle = document.getElementById('themeToggle');
-toggle.addEventListener('click', ()=>{
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  toggle.textContent = next === 'dark' ? '🌙' : '☀️';
-  renderAll();
-});
-
-/* ---- copy ---- */
-document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
-  navigator.clipboard?.writeText(c.dataset.copy); const o=c.textContent; c.textContent='copied'; setTimeout(()=>c.textContent=o,1200);
-}));
-
-renderAll();
-</script>
+<script src="assets/mc.js" defer></script>
+<script src="assets/site.js" defer></script>
 </body>
 </html>
