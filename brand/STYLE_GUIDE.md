@@ -12,7 +12,7 @@ itself produces. The goal is simple: **every surface should feel like the same
 product.** A chart rendered by `project.plot()` should be unmistakably the same
 brand as the logo and the website.
 
-A live, interactive version of this system is in [`website/index.html`](../website/index.html).
+The web token block lives in [`website/assets/style.css`](../website/assets/style.css) (`:root` / `[data-theme="light"]`).
 The library-side implementation lives in [`src/planaco/style.py`](../src/planaco/style.py).
 
 ---
@@ -150,7 +150,7 @@ Never imply false certainty — the whole point is the range.
 SVG renderer in `src/planaco/charts.py`.
 
 **Web / CSS** — copy the `:root` and `[data-theme="light"]` custom properties from
-[`website/index.html`](../website/index.html). They are the same tokens listed
+[`website/assets/style.css`](../website/assets/style.css). They are the same tokens listed
 above, named identically (`--gold`, `--canvas`, `--chart-bar`, …).
 
 **Docs / README** — use the lockup at the top, light/dark via the GitHub
