@@ -260,5 +260,31 @@ document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
   } catch (e) { /* leave the plain GitHub button */ }
 })();
 
+/* ---- code tabs ---- */
+(function initTabs(){
+  const list = document.querySelector('.tabs');
+  if(!list) return;
+  const tabs = Array.from(list.querySelectorAll('[role="tab"]'));
+  function select(tab){
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    tab.focus();
+  }
+  list.addEventListener('click', e => {
+    const tab = e.target.closest('[role="tab"]');
+    if(tab) select(tab);
+  });
+  list.addEventListener('keydown', e => {
+    const i = tabs.indexOf(document.activeElement);
+    if(i < 0) return;
+    if(e.key === 'ArrowRight') select(tabs[(i + 1) % tabs.length]);
+    if(e.key === 'ArrowLeft')  select(tabs[(i - 1 + tabs.length) % tabs.length]);
+  });
+})();
+
 buildDemoControls();
 renderAll({animateHero: true});

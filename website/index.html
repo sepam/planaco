@@ -166,7 +166,7 @@ project.statistics(n=<span class="tok-num">10_000</span>)   <span class="tok-com
 </section>
 
 <!-- ===================== HOW ===================== -->
-<section id="how" style="background: var(--surface);">
+<section id="how">
   <div class="wrap">
     <div class="section-head">
       <div class="section-tag">How it works</div>
@@ -192,17 +192,6 @@ project.statistics(n=<span class="tok-num">10_000</span>)   <span class="tok-com
   </div>
 </section>
 
-<!-- ===================== DISTRIBUTIONS ===================== -->
-<section id="distributions" style="background: var(--surface);">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">Six distributions</div>
-      <h2>Pick the shape that fits the uncertainty</h2>
-    </div>
-    <div class="dists" id="dists"></div>
-  </div>
-</section>
-
 <!-- ===================== CODE ===================== -->
 <section id="code" style="background: var(--surface);">
   <div class="wrap">
@@ -210,11 +199,36 @@ project.statistics(n=<span class="tok-num">10_000</span>)   <span class="tok-com
       <div class="section-tag">From YAML to forecast</div>
       <h2>Define it once, simulate forever</h2>
     </div>
-    <div class="code-grid">
-      <div class="code-block">
-        <div class="bar"><span class="dotr" style="background:var(--coral)"></span><span class="dotr" style="background:var(--amber)"></span><span class="dotr" style="background:var(--teal)"></span> &nbsp;project.yaml</div>
-<pre><span class="tok-key">project:</span>
-  <span class="tok-key">name:</span> <span class="tok-str">"Website Redesign"</span>
+    <div class="tabs-card">
+      <div class="tabs" role="tablist" aria-label="Code examples">
+        <button class="tab" role="tab" id="tab-python" aria-controls="panel-python" aria-selected="true">Python</button>
+        <button class="tab" role="tab" id="tab-yaml" aria-controls="panel-yaml" aria-selected="false" tabindex="-1">YAML + CLI</button>
+        <button class="tab" role="tab" id="tab-output" aria-controls="panel-output" aria-selected="false" tabindex="-1">Output</button>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-python" aria-labelledby="tab-python">
+<pre><span class="tok-key">from</span> planaco <span class="tok-key">import</span> Task, Project
+
+project = Project(name=<span class="tok-str">"Web App"</span>, unit=<span class="tok-str">"days"</span>)
+
+design   = Task(name=<span class="tok-str">"Design"</span>,   min_duration=<span class="tok-num">5</span>,  mode_duration=<span class="tok-num">7</span>,  max_duration=<span class="tok-num">14</span>)
+frontend = Task(name=<span class="tok-str">"Frontend"</span>, min_duration=<span class="tok-num">8</span>,  mode_duration=<span class="tok-num">12</span>, max_duration=<span class="tok-num">15</span>)
+backend  = Task(name=<span class="tok-str">"Backend"</span>,  min_duration=<span class="tok-num">10</span>, mode_duration=<span class="tok-num">15</span>, max_duration=<span class="tok-num">25</span>)
+testing  = Task(name=<span class="tok-str">"Testing"</span>,  min_duration=<span class="tok-num">2</span>,  mode_duration=<span class="tok-num">3</span>,  max_duration=<span class="tok-num">5</span>)
+
+project.add_task(design)
+project.add_task(frontend, depends_on=[design])
+project.add_task(backend,  depends_on=[design])
+project.add_task(testing,  depends_on=[frontend, backend])
+
+stats = project.statistics(n=<span class="tok-num">10_000</span>)
+<span class="tok-key">print</span>(stats[<span class="tok-str">"percentiles"</span>][<span class="tok-str">"p85"</span>])</pre>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-yaml" aria-labelledby="tab-yaml" hidden>
+<pre><span class="tok-com"># project.yaml — then: planaco stats project.yaml</span>
+<span class="tok-key">project:</span>
+  <span class="tok-key">name:</span> <span class="tok-str">"Web App"</span>
   <span class="tok-key">unit:</span> <span class="tok-str">days</span>
   <span class="tok-key">seed:</span> <span class="tok-num">42</span>
 
@@ -231,13 +245,24 @@ project.statistics(n=<span class="tok-num">10_000</span>)   <span class="tok-com
     <span class="tok-key">max_duration:</span> <span class="tok-num">25</span>
     <span class="tok-key">depends_on:</span> [<span class="tok-str">design</span>]</pre>
       </div>
-      <div class="code-block">
-        <div class="bar"><span class="dotr" style="background:var(--coral)"></span><span class="dotr" style="background:var(--amber)"></span><span class="dotr" style="background:var(--teal)"></span> &nbsp;$ planaco stats project.yaml</div>
-        <pre><span class="tok-com"># Website Redesign — 10,000 sims</span>
+
+      <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output" hidden>
+        <pre><span class="tok-com"># Web App — 10,000 sims</span>
 
 <div class="stat-line"><span>Mean</span><span class="v">24.3 days</span></div><div class="stat-line"><span>Median (P50)</span><span class="v">24.0 days</span></div><div class="stat-line"><span>Std dev</span><span class="v">3.1 days</span></div><div class="stat-line"><span>P85</span><span class="v">27.4 days</span></div><div class="stat-line"><span>P95</span><span class="v">29.8 days</span></div><div class="stat-line" style="border:none"><span>95% CI</span><span class="v">[18.2, 30.4]</span></div></pre>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ===================== DISTRIBUTIONS ===================== -->
+<section id="distributions">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-tag">Six distributions</div>
+      <h2>Pick the shape that fits the uncertainty</h2>
+    </div>
+    <div class="dists" id="dists"></div>
   </div>
 </section>
 
