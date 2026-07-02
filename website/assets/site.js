@@ -81,6 +81,12 @@ function staticModel(withMarks){
   };
 }
 
+function drawHero(animate){
+  const svg = document.getElementById('heroHist');
+  if(!svg) return;
+  renderHist(svg, staticModel(true), {animate: animate, xTicks: [14, 18, 22, 26, 30]});
+}
+
 function drawHistogram(id, opts){
   const svg = document.getElementById(id);
   if(!svg) return;
@@ -213,7 +219,8 @@ function runDemo(){
   document.getElementById('statP95').textContent = s.p95.toFixed(1);
 }
 
-function renderAll(){
+function renderAll(opts = {}){
+  drawHero(!!opts.animateHero);
   drawHistogram('probHist', {compact:true});
   drawPointEstimate('ptEstimate');
   renderDists();
@@ -254,4 +261,4 @@ document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
 })();
 
 buildDemoControls();
-renderAll();
+renderAll({animateHero: true});

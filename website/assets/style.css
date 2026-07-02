@@ -145,7 +145,13 @@
     background-size: 56px 56px;
     mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
   }
-  .hero-inner { position: relative; z-index: 1; max-width: 760px; }
+  .hero-inner {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: 1.05fr 0.95fr;
+    gap: 48px; align-items: center;
+  }
+  @media (max-width: 880px) { .hero-inner { grid-template-columns: 1fr; } }
+  .hero-chart svg { width: 100%; height: auto; display: block; }
   .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 13px; font-weight: 500; color: var(--text-muted);
@@ -288,3 +294,16 @@
   .foot-links a:hover { color: var(--text); }
 
   .badge { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: 3px 8px; }
+
+  /* hero histogram build-in */
+  .bar-rise {
+    transform-box: fill-box; transform-origin: 50% 100%;
+    animation: bar-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 28ms);
+  }
+  @keyframes bar-rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  .mark-in { animation: mark-in 0.4s ease-out both; animation-delay: 1s; }
+  @keyframes mark-in { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .bar-rise, .mark-in { animation: none; }
+  }
