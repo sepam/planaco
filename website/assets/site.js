@@ -172,7 +172,7 @@ function buildDemoControls(){
           <input type="range" id="${t.key}-${p}" min="1" max="40" step="1"
                  value="${t.triple[i]}" data-key="${t.key}" data-which="${i}"
                  aria-label="${t.label} ${p} duration in days" />
-          <span class="p-value" id="${t.key}-${p}-value">${t.triple[i]}</span>
+          <span class="p-value"><span id="${t.key}-${p}-value">${t.triple[i]}</span><span class="p-unit">days</span></span>
         </div>`).join('')}
     </fieldset>`).join('');
   host.addEventListener('input', onDemoInput);

@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>planaco — Probabilistic Project Planning for Python</title>
+<title>planaco · Probabilistic Project Planning for Python</title>
 <meta name="description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
 <link rel="canonical" href="https://sepam.github.io/planaco/" />
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="planaco" />
-<meta property="og:title" content="planaco — Probabilistic Project Planning for Python" />
+<meta property="og:title" content="planaco · Probabilistic Project Planning for Python" />
 <meta property="og:description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
 <meta property="og:url" content="https://sepam.github.io/planaco/" />
 <meta property="og:image" content="https://sepam.github.io/planaco/assets/og-card.png" />
 <meta property="og:image:width" content="1280" />
 <meta property="og:image:height" content="640" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="planaco — Probabilistic Project Planning for Python" />
+<meta name="twitter:title" content="planaco · Probabilistic Project Planning for Python" />
 <meta name="twitter:description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
 <meta name="twitter:image" content="https://sepam.github.io/planaco/assets/og-card.png" />
 
@@ -88,7 +88,7 @@
     <div class="hero-copy">
       <span class="eyebrow"><span class="dot"></span> Monte Carlo project estimation · Python · alpha</span>
       <h1>Stop guessing dates.<br/>Plan with <span class="accent">distributions</span>.</h1>
-      <p class="sub">Planaco models every task as a probability distribution and runs thousands of Monte Carlo simulations — so you ship honest confidence ranges instead of a single optimistic number.</p>
+      <p class="sub">Planaco models every task as a probability distribution and runs thousands of Monte Carlo simulations, so you ship honest confidence ranges instead of a single optimistic number.</p>
       <div class="hero-actions">
         <div class="install">
           <span class="prompt">$</span>
@@ -112,7 +112,7 @@
     <div class="section-head">
       <div class="section-tag">The problem</div>
       <h2>A single number hides the risk</h2>
-      <p>“This takes 5 days” throws away everything you know about uncertainty. A distribution keeps it — and tells you how often you'll actually be late.</p>
+      <p>“This takes 5 days” throws away everything you know about uncertainty. A distribution keeps that knowledge and tells you how often you'll actually be late.</p>
     </div>
     <div class="compare">
       <div class="card">
@@ -121,7 +121,7 @@
         <div class="takeaway">One bar. No sense of best case, worst case, or how confident you should be.</div>
       </div>
       <div class="card">
-        <div class="label">21 days is a coin flip — 26 is near-certain</div>
+        <div class="label">21 days is a coin flip, 26 is near-certain</div>
         <svg id="probHist" viewBox="0 0 380 180" aria-label="Distribution of outcomes"></svg>
         <div class="takeaway">The full shape of outcomes, with percentile markers you can actually commit to.</div>
       </div>
@@ -135,7 +135,7 @@
     <div class="section-head">
       <div class="section-tag">Live demo</div>
       <h2>Try it. No install needed.</h2>
-      <p>Four tasks, real dependencies. Every drag runs a fresh 10,000-trial Monte Carlo — this is exactly what planaco does.</p>
+      <p>Four tasks, real dependencies. Every drag runs a fresh 10,000-trial Monte Carlo, exactly what planaco does.</p>
     </div>
     <div class="demo-grid">
       <div class="card demo-controls" id="demoControls">
@@ -177,7 +177,7 @@ project.statistics(n=<span class="tok-num">10_000</span>)   <span class="tok-com
       <div class="step">
         <div class="num">1</div>
         <h3>Model each task</h3>
-        <p>Give a min / most-likely / max — or pick one of six distributions. Planaco captures the uncertainty you already feel.</p>
+        <p>Give a min / most-likely / max, or pick one of six distributions. Planaco captures the uncertainty you already feel.</p>
       </div>
       <div class="step">
         <div class="num">2</div>
@@ -227,7 +227,7 @@ stats = project.statistics(n=<span class="tok-num">10_000</span>)
       </div>
 
       <div class="tab-panel" role="tabpanel" id="panel-yaml" aria-labelledby="tab-yaml" hidden>
-<pre><span class="tok-com"># project.yaml — then: planaco stats project.yaml</span>
+<pre><span class="tok-com"># project.yaml, then run: planaco stats project.yaml</span>
 <span class="tok-key">project:</span>
   <span class="tok-key">name:</span> <span class="tok-str">"Web App"</span>
   <span class="tok-key">unit:</span> <span class="tok-str">days</span>
@@ -248,7 +248,7 @@ stats = project.statistics(n=<span class="tok-num">10_000</span>)
       </div>
 
       <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output" hidden>
-        <pre><span class="tok-com"># Web App — 10,000 sims</span>
+        <pre><span class="tok-com"># Web App · 10,000 sims</span>
 
 <div class="stat-line"><span>Mean</span><span class="v">24.3 days</span></div><div class="stat-line"><span>Median (P50)</span><span class="v">24.0 days</span></div><div class="stat-line"><span>Std dev</span><span class="v">3.1 days</span></div><div class="stat-line"><span>P85</span><span class="v">27.4 days</span></div><div class="stat-line"><span>P95</span><span class="v">29.8 days</span></div><div class="stat-line" style="border:none"><span>95% CI</span><span class="v">[18.2, 30.4]</span></div></pre>
       </div>
