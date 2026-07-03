@@ -116,12 +116,12 @@
     </div>
     <div class="compare">
       <div class="card">
-        <div class="label"><span class="pill bad">point estimate</span> “≈ 21 days”</div>
+        <div class="label">~ 21 days</div>
         <svg id="ptEstimate" viewBox="0 0 380 180" aria-label="Single point estimate"></svg>
         <div class="takeaway">One bar. No sense of best case, worst case, or how confident you should be.</div>
       </div>
       <div class="card">
-        <div class="label"><span class="pill good">distribution</span> P50 21 · P85 24 · P95 26</div>
+        <div class="label">21 days is a coin flip — 26 is near-certain</div>
         <svg id="probHist" viewBox="0 0 380 180" aria-label="Distribution of outcomes"></svg>
         <div class="takeaway">The full shape of outcomes, with percentile markers you can actually commit to.</div>
       </div>
@@ -143,7 +143,7 @@
       </div>
       <div class="demo-output">
         <div class="chart-card">
-          <h3>Project completion</h3>
+          <h3>How long until project completion?</h3>
           <div class="desc">10,000 simulations · days to completion</div>
           <svg id="demoHist" viewBox="0 0 520 300" aria-label="Live histogram of simulated completion times"></svg>
         </div>
@@ -152,7 +152,6 @@
           <div class="stat p85"><span class="k">Safe to promise</span><span class="v mono"><span id="statP85">—</span><span class="unit">days</span></span><span class="ptag">P85</span></div>
           <div class="stat p95"><span class="k">Near-certain</span><span class="v mono"><span id="statP95">—</span><span class="unit">days</span></span><span class="ptag">P95</span></div>
         </div>
-        <p class="demo-hint">Widen Backend&rsquo;s max — watch P95 slip while P50 barely moves.</p>
       </div>
     </div>
     <div class="code-block demo-code">

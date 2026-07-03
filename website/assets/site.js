@@ -116,7 +116,7 @@ function pdfSamples(kind){
   const f = {
     triangular: x=>{ const a=0.1,m=0.45,b=0.95; if(x<a||x>b) return 0; return x<m ? (x-a)/(m-a) : (b-x)/(b-m); },
     pert:       x=>Math.pow(x,2.2)*Math.pow(1-x,1.6),
-    uniform:    x=> (x>0.15 && x<0.85) ? 1 : (x>0.1&&x<0.9?0.5:0),
+    uniform:    x=> (x>=0.1 && x<=0.9) ? 1 : 0,
     normal:     x=>Math.exp(-Math.pow((x-0.5)/0.16,2)/2),
     lognormal:  x=>{ if(x<=0.02) return 0; const t=(x)*3; return Math.exp(-Math.pow(Math.log(t)+0.2,2)/(2*0.45*0.45))/t; },
     beta:       x=>Math.pow(x,1.6)*Math.pow(1-x,3.2),
@@ -129,8 +129,9 @@ function sparkSVG(kind){
   let d=`M ${pad} ${H-pad} `;
   ys.forEach((y,i)=>{ const x=pad+i/(ys.length-1)*(W-pad*2); d+=`L ${x.toFixed(1)} ${(H-pad-y*plotH).toFixed(1)} `; });
   d+=`L ${W-pad} ${H-pad} Z`;
-  // mode dot
-  let mi=0; ys.forEach((y,i)=>{ if(y>=ys[mi]) mi=i; });
+  // mode dot — centered on the peak plateau so flat-topped shapes (uniform) don't pin it to one edge
+  const peak=Math.max(...ys);
+  const mi=Math.round((ys.indexOf(peak)+ys.lastIndexOf(peak))/2);
   const mx=pad+mi/(ys.length-1)*(W-pad*2), my=H-pad-ys[mi]*plotH;
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     <path d="${d}" fill="var(--gold-soft)" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/>

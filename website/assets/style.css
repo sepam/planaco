@@ -202,9 +202,6 @@
   .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   @media (max-width: 760px) { .compare { grid-template-columns: 1fr; } }
   .compare .label { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-weight: 600; }
-  .compare .pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 6px; font-family: "JetBrains Mono", monospace; }
-  .pill.bad { color: var(--coral); background: color-mix(in srgb, var(--coral) 16%, transparent); }
-  .pill.good { color: var(--gold-strong); background: var(--gold-soft); }
   .compare .takeaway { color: var(--text-muted); font-size: 14px; margin-top: 16px; }
 
   /* steps */
@@ -246,7 +243,6 @@
   .demo-stats .p50 .v { color: var(--gold); }
   .demo-stats .p85 .v { color: var(--amber); }
   .demo-stats .p95 .v { color: var(--coral); }
-  .demo-hint { color: var(--text-muted); font-size: 14px; margin-top: 14px; }
   .demo-code { margin-top: 8px; }
 
   /* distributions */
