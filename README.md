@@ -16,6 +16,7 @@
   [![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue?style=flat-square)](https://mypy-lang.org/)
 
   <p align="center">
+    <a href="https://sepam.github.io/planaco/"><b>Website</b></a> •
     <a href="#why-planaco">Why Planaco?</a> •
     <a href="#features">Features</a> •
     <a href="#installation">Installation</a> •
