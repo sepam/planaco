@@ -214,9 +214,9 @@ function runDemo(){
       {value: s.p95, color: v('--coral'), label: 'P95'},
     ],
   }, {xTicks: [0, 0.25, 0.5, 0.75, 1].map(f => s.min + f * (s.max - s.min))});
-  document.getElementById('statP50').textContent = s.p50.toFixed(1);
-  document.getElementById('statP85').textContent = s.p85.toFixed(1);
-  document.getElementById('statP95').textContent = s.p95.toFixed(1);
+  document.getElementById('statP50').textContent = String(Math.ceil(s.p50));
+  document.getElementById('statP85').textContent = String(Math.ceil(s.p85));
+  document.getElementById('statP95').textContent = String(Math.ceil(s.p95));
 }
 
 function renderAll(opts = {}){
