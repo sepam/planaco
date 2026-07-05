@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/). While in
 alpha (`0.x`), the public API may change between minor releases.
 
+## [0.3.1] - 2026-07-05
+
+Packaging and presentation polish. No library code or public API changes.
+
+### Added
+- `Documentation`, `Issues`, and `Changelog` links in `[project.urls]`, using
+  PyPI's recognized labels so they render with their icons on the project page.
+
+### Changed
+- The `Homepage` project URL now points at the project website
+  (https://sepam.github.io/planaco/) instead of the GitHub repository.
+- Trimmed the README badge row from eight badges to the four canonical trust
+  badges (CI, PyPI version, Python versions, License).
+
 ## [0.3.0] - 2026-06-20
 
 The "SVG-native" release: charts are now rendered as crisp, on-brand SVG, and the
@@ -41,4 +55,5 @@ Tagged releases (`v0.2.0`–`v0.2.3`) predate this changelog. See the
 [git history](https://github.com/sepam/planaco/commits/master) and
 [tags](https://github.com/sepam/planaco/tags) for details.
 
+[0.3.1]: https://github.com/sepam/planaco/tree/v0.3.1
 [0.3.0]: https://github.com/sepam/planaco/tree/v0.3.0
