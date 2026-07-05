@@ -56,7 +56,10 @@ planaco = "planaco.cli:main"
 
 [project.urls]
 Homepage = "https://sepam.github.io/planaco/"
+Documentation = "https://github.com/sepam/planaco#readme"
 Repository = "https://github.com/sepam/planaco"
+Issues = "https://github.com/sepam/planaco/issues"
+Changelog = "https://github.com/sepam/planaco/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
