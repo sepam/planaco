@@ -32,6 +32,10 @@
     --amber:         #f0b44d;
     --teal:          #5ec8c8;
 
+    /* inline icons (masked with currentColor) */
+    --icon-copy:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2.5'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E");
+    --icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+
     /* chart-specific */
     --chart-bar:        #3a5a8c;
     --chart-bar-stroke: #5d82bb;
@@ -173,8 +177,30 @@
     font-family: "JetBrains Mono", monospace; font-size: 15px;
   }
   .install .prompt { color: var(--gold); }
-  .install .copy { color: var(--text-muted); font-size: 13px; cursor: pointer; appearance: none; background: none; border: none; padding: 0; font: inherit; font-family: inherit; }
-  .install .copy:hover { color: var(--text); }
+  .install .copy {
+    display: inline-flex; align-items: center; gap: 7px;
+    margin-left: 4px; padding: 6px 12px;
+    font: inherit; font-family: inherit; font-size: 12.5px; font-weight: 500;
+    color: var(--text-muted); cursor: pointer; appearance: none;
+    background: var(--surface-2); border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    transition: color .2s, background .2s, border-color .2s, transform .1s;
+  }
+  .install .copy::before {
+    content: ""; width: 13px; height: 13px; flex: none;
+    background: currentColor;
+    -webkit-mask: var(--icon-copy) center / contain no-repeat;
+    mask: var(--icon-copy) center / contain no-repeat;
+  }
+  .install .copy:hover {
+    color: var(--text); background: var(--gold-soft); border-color: var(--gold);
+  }
+  .install .copy:active { transform: translateY(1px); }
+  .install .copy.copied { color: var(--gold-strong); border-color: var(--gold); }
+  .install .copy.copied::before {
+    -webkit-mask-image: var(--icon-check);
+    mask-image: var(--icon-check);
+  }
   .btn-primary {
     background: var(--gold); color: #0a1628;
     padding: 14px 24px; border-radius: 10px; font-weight: 600; font-size: 15px;
@@ -299,7 +325,9 @@
   /* final CTA */
   .cta-inner { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 26px; }
   .cta-inner h2 { font-size: clamp(28px, 4vw, 40px); }
-  .install.big { font-size: 17px; padding: 16px 24px; }
+  .install.big { font-size: 17px; padding: 14px 16px 14px 24px; gap: 14px; }
+  .install.big .copy { font-size: 13.5px; padding: 8px 14px; }
+  .install.big .copy::before { width: 15px; height: 15px; }
   .cta-links { display: flex; gap: 14px; }
   .btn-ghost {
     border: 1px solid var(--border-strong); color: var(--text);
