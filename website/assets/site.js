@@ -244,7 +244,7 @@ syncToggleIcon();
 
 /* ---- copy ---- */
 document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
-  navigator.clipboard?.writeText(c.dataset.copy); const o=c.textContent; c.textContent='copied'; setTimeout(()=>c.textContent=o,1200);
+  navigator.clipboard?.writeText(c.dataset.copy); const o=c.textContent; c.textContent='copied'; c.classList.add('copied'); setTimeout(()=>{c.textContent=o; c.classList.remove('copied');},1200);
 }));
 
 /* ---- GitHub stars (fail-silent) ---- */
