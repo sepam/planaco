@@ -110,7 +110,10 @@ project.add_task(deploy, depends_on=[testing])
 ```
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/project_estimation.png" alt="Project Estimation" width="700"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/sepam/planaco/master/example/project_task_model_dark.svg">
+    <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/project_task_model_light.svg" alt="Web App Development modeled as five tasks, each with a min/most-likely/max duration range; arrows show dependencies and the backend track runs in parallel" width="800"/>
+  </picture>
 </div>
 
 ---
