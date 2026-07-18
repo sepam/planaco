@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 484" width="1120" height="484" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+<rect width="1120" height="484" fill="#0a1628"/>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9fb3c8"/></marker></defs>
+<text x="48" y="54" fill="#f0f6fc" font-size="24" font-weight="700" letter-spacing="-0.5" font-family="'Space Grotesk', Inter, 'Helvetica Neue', Arial, sans-serif">Web App Development</text>
+<text x="48" y="80" fill="#9fb3c8" font-size="14">Every task is a duration range, not a fixed number. Arrows are dependencies &#8212; tasks without one run in parallel.</text>
+<path d="M 258 174 L 316 174" fill="none" stroke="#9fb3c8" stroke-width="1.5" opacity="0.7" marker-end="url(#arr)"/>
+<path d="M 528 174 C 558.0 174, 558.0 258, 586 258" fill="none" stroke="#9fb3c8" stroke-width="1.5" opacity="0.7" marker-end="url(#arr)"/>
+<path d="M 258 342 C 423.0 342, 423.0 258, 586 258" fill="none" stroke="#9fb3c8" stroke-width="1.5" opacity="0.7" marker-end="url(#arr)"/>
+<path d="M 798 258 L 856 258" fill="none" stroke="#9fb3c8" stroke-width="1.5" opacity="0.7" marker-end="url(#arr)"/>
+<rect x="48" y="112" width="210" height="124" rx="14" fill="#0f2038" stroke="#1b2c49" stroke-width="1.5"/>
+<text x="153.0" y="144" fill="#f0f6fc" font-size="15" font-weight="600" text-anchor="middle" font-family="'Space Grotesk', Inter, 'Helvetica Neue', Arial, sans-serif">Design UI</text>
+<text x="153.0" y="162" fill="#9fb3c8" font-size="10" letter-spacing="2" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">TRIANGULAR</text>
+<line x1="68" y1="208" x2="238" y2="208" stroke="#33425f" stroke-width="1"/>
+<polygon points="73,208 126.3,180 233,208" fill="#3a5a8c" fill-opacity="0.30" stroke="#5d82bb" stroke-width="1.5" stroke-linejoin="round"/>
+<line x1="126.3" y1="208" x2="126.3" y2="180" stroke="#f5d97a" stroke-width="2.5"/>
+<text x="73.0" y="226" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">2</text>
+<text x="126.3" y="226" fill="#f0f6fc" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">3</text>
+<text x="233.0" y="226" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">5</text>
+<rect x="318" y="112" width="210" height="124" rx="14" fill="#0f2038" stroke="#1b2c49" stroke-width="1.5"/>
+<text x="423.0" y="144" fill="#f0f6fc" font-size="15" font-weight="600" text-anchor="middle" font-family="'Space Grotesk', Inter, 'Helvetica Neue', Arial, sans-serif">Develop Frontend</text>
+<text x="423.0" y="162" fill="#9fb3c8" font-size="10" letter-spacing="2" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">TRIANGULAR</text>
+<line x1="338" y1="208" x2="508" y2="208" stroke="#33425f" stroke-width="1"/>
+<polygon points="343,208 407.0,180 503,208" fill="#3a5a8c" fill-opacity="0.30" stroke="#5d82bb" stroke-width="1.5" stroke-linejoin="round"/>
+<line x1="407.0" y1="208" x2="407.0" y2="180" stroke="#f5d97a" stroke-width="2.5"/>
+<text x="343.0" y="226" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">5</text>
+<text x="407.0" y="226" fill="#f0f6fc" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">7</text>
+<text x="503.0" y="226" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">10</text>
+<rect x="48" y="280" width="210" height="124" rx="14" fill="#0f2038" stroke="#1b2c49" stroke-width="1.5"/>
+<text x="153.0" y="312" fill="#f0f6fc" font-size="15" font-weight="600" text-anchor="middle" font-family="'Space Grotesk', Inter, 'Helvetica Neue', Arial, sans-serif">Develop Backend</text>
+<text x="153.0" y="330" fill="#9fb3c8" font-size="10" letter-spacing="2" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">TRIANGULAR</text>
+<line x1="68" y1="376" x2="238" y2="376" stroke="#33425f" stroke-width="1"/>
+<polygon points="73,376 137.0,348 233,376" fill="#3a5a8c" fill-opacity="0.30" stroke="#5d82bb" stroke-width="1.5" stroke-linejoin="round"/>
+<line x1="137.0" y1="376" x2="137.0" y2="348" stroke="#f5d97a" stroke-width="2.5"/>
+<text x="73.0" y="394" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">4</text>
+<text x="137.0" y="394" fill="#f0f6fc" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">6</text>
+<text x="233.0" y="394" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">9</text>
+<rect x="588" y="196" width="210" height="124" rx="14" fill="#0f2038" stroke="#1b2c49" stroke-width="1.5"/>
+<text x="693.0" y="228" fill="#f0f6fc" font-size="15" font-weight="600" text-anchor="middle" font-family="'Space Grotesk', Inter, 'Helvetica Neue', Arial, sans-serif">Testing</text>
+<text x="693.0" y="246" fill="#9fb3c8" font-size="10" letter-spacing="2" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">TRIANGULAR</text>
+<line x1="608" y1="292" x2="778" y2="292" stroke="#33425f" stroke-width="1"/>
+<polygon points="613,292 666.3,264 773,292" fill="#3a5a8c" fill-opacity="0.30" stroke="#5d82bb" stroke-width="1.5" stroke-linejoin="round"/>
+<line x1="666.3" y1="292" x2="666.3" y2="264" stroke="#f5d97a" stroke-width="2.5"/>
+<text x="613.0" y="310" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">2</text>
+<text x="666.3" y="310" fill="#f0f6fc" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">3</text>
+<text x="773.0" y="310" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">5</text>
+<rect x="858" y="196" width="210" height="124" rx="14" fill="#0f2038" stroke="#1b2c49" stroke-width="1.5"/>
+<text x="963.0" y="228" fill="#f0f6fc" font-size="15" font-weight="600" text-anchor="middle" font-family="'Space Grotesk', Inter, 'Helvetica Neue', Arial, sans-serif">Deploy</text>
+<text x="963.0" y="246" fill="#9fb3c8" font-size="10" letter-spacing="2" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">UNIFORM</text>
+<line x1="878" y1="292" x2="1048" y2="292" stroke="#33425f" stroke-width="1"/>
+<rect x="883" y="274" width="160" height="18" fill="#3a5a8c" fill-opacity="0.30" stroke="#5d82bb" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="883.0" y="310" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">1</text>
+<text x="1043.0" y="310" fill="#9fb3c8" font-size="12" font-weight="400" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace">2</text>
+<text x="153" y="272" fill="#9fb3c8" font-size="12" font-style="italic" text-anchor="middle">runs in parallel &#8212; no dependency</text>
+<text x="693" y="188" fill="#9fb3c8" font-size="12" font-style="italic" text-anchor="middle">waits for both tracks</text>
+<polygon points="200,452 216,438 240,452" fill="#3a5a8c" fill-opacity="0.30" stroke="#5d82bb" stroke-width="1.2" stroke-linejoin="round"/>
+<line x1="216" y1="452" x2="216" y2="438" stroke="#f5d97a" stroke-width="2"/>
+<text x="252" y="448" fill="#9fb3c8" font-size="12">min &#183; most likely (gold) &#183; max, in days</text>
+<rect x="530" y="439" width="40" height="13" fill="#3a5a8c" fill-opacity="0.30" stroke="#5d82bb" stroke-width="1.2"/>
+<text x="582" y="448" fill="#9fb3c8" font-size="12">flat = uniform (any value equally likely)</text>
+<path d="M 850 444 L 886 444" stroke="#9fb3c8" stroke-width="1.5" opacity="0.7" marker-end="url(#arr)"/>
+<text x="898" y="448" fill="#9fb3c8" font-size="12">depends on</text>
+</svg>
