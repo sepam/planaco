@@ -4,7 +4,7 @@ Produces ``example/project_task_model_{light,dark}.svg``, a hand-designed
 explainer diagram that mirrors the README's "Web App Development" code block
 exactly: five tasks, parallel + sequential dependencies, and each task's
 min / most-likely / max duration range drawn as a mini distribution glyph
-(gold marks the mode, per ``brand/STYLE_GUIDE.md``).
+(gold marks the mode, per ``planaco.style``).
 
 Unlike the plots from ``generate_example_plots.py`` this is not library
 output — it is a brand illustration, kept as a script so it can be edited

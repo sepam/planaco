@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/sepam/planaco/master/brand/planaco-lockup-dark.svg">
-    <img src="https://raw.githubusercontent.com/sepam/planaco/master/brand/planaco-lockup-light.svg" alt="planaco" width="320">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/sepam/planaco/master/assets/planaco-lockup-dark.svg">
+    <img src="https://raw.githubusercontent.com/sepam/planaco/master/assets/planaco-lockup-light.svg" alt="planaco" width="320">
   </picture>
 
   **Probabilistic Project Planning with Monte Carlo Simulation**
@@ -326,8 +326,6 @@ planaco graph project.yaml                # Visualize the task dependency graph
 <div align="center">
   <img src="https://raw.githubusercontent.com/sepam/planaco/master/example/project_dependency_graph.png" alt="Task Dependency Graph" width="800"/>
 </div>
-
-Charts render as crisp, on-brand SVG (or PNG) — see the [brand &amp; style guide](brand/STYLE_GUIDE.md).
 
 Example YAML config:
 

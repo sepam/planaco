@@ -9,8 +9,7 @@ The brand motif is a histogram whose modal (most likely) bar is gold. Every
 chart echoes it: navy/slate distribution bars, a gold mode bar, and percentile
 markers that warm from gold to coral as risk climbs.
 
-See ``brand/STYLE_GUIDE.md`` for the full design system and ``website/index.html``
-for a live reference.
+See ``website/index.html`` for a live reference.
 
 Public API
 ----------
@@ -30,7 +29,7 @@ from typing import Dict, List
 # Brand constants (theme-independent)
 # ---------------------------------------------------------------------------
 
-#: Theme-independent brand colors. See brand/STYLE_GUIDE.md section 2.
+#: Theme-independent brand colors.
 PALETTE: Dict[str, str] = {
     "navy": "#0c2a52",
     "paper": "#f0f6fc",
