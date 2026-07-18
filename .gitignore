@@ -52,3 +52,4 @@ docs/internal/
 
 # Claude Code local config and memory
 .claude/
+brand/

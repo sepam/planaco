@@ -1,8 +1,8 @@
 """Regenerate the on-brand example plots referenced by the README.
 
 These plots are genuine library output, so they are produced by
-``Project.plot()`` with the Planaco theme applied (see ``planaco.style`` and
-``brand/STYLE_GUIDE.md``). Runs are seeded for reproducibility.
+``Project.plot()`` with the Planaco theme applied (see ``planaco.style``).
+Runs are seeded for reproducibility.
 
 Usage (from the repo root)::
 

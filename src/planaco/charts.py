@@ -2,7 +2,7 @@
 
 This is the on-brand, web-clean renderer used by ``Project.plot()`` and
 ``Project.plot_dependency_graph()``. It emits crisp, scalable SVG that matches
-``website/index.html`` and the brand system in ``brand/STYLE_GUIDE.md`` — flat
+``website/index.html`` — flat
 navy/slate bars, a gold modal bar echoing the logo, and percentile markers that
 warm from gold to coral.
 

@@ -804,7 +804,7 @@ class Project:
             List of percentiles to show (default: [50, 85, 95])
         theme : str
             Planaco visual theme, "light" (default) or "dark". See
-            ``planaco.style`` and ``brand/STYLE_GUIDE.md``.
+            ``planaco.style``.
 
         Returns
         -------
