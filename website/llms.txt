@@ -1,0 +1,115 @@
+# planaco
+
+> planaco is a Python library and command-line tool for Monte Carlo project estimation. You describe each task as a probability distribution (for example a minimum, most likely and maximum duration), declare which tasks depend on which, and planaco simulates the project many times and reports percentiles such as P50, P85 and P95 for the finish time.
+
+Version 0.3.1, alpha: the public API may still change between releases. MIT licensed. Requires Python 3.8 or newer. Runtime dependencies: click, numpy, PyYAML, cairosvg. PNG export also needs the Cairo system library; SVG output works without it.
+
+## Install
+
+```
+pip install planaco
+```
+
+## Python
+
+```python
+from planaco import Task, Project
+
+project = Project(name="Web App", unit="days")
+
+design   = Task(name="Design",   min_duration=5,  mode_duration=7,  max_duration=14)
+frontend = Task(name="Frontend", min_duration=8,  mode_duration=12, max_duration=15)
+backend  = Task(name="Backend",  min_duration=10, mode_duration=15, max_duration=25)
+testing  = Task(name="Testing",  min_duration=2,  mode_duration=3,  max_duration=5)
+
+project.add_task(design)
+project.add_task(frontend, depends_on=[design])
+project.add_task(backend,  depends_on=[design])
+project.add_task(testing,  depends_on=[frontend, backend])
+
+stats = project.statistics(n=10_000)
+print(stats["percentiles"]["p85"])
+```
+
+`project.statistics(n=...)` returns a dict with these keys: `unit`, `n_simulations`, `mean`, `median`, `std_dev`, `min`, `max`, `percentiles` (`p10`, `p50`, `p85`, `p90`, `p95`) and `confidence_intervals` (`"95%"`).
+
+`project.get_critical_path_analysis(n=...)` returns, for each task, the `count` and `frequency` of simulated runs in which the task was on the critical path.
+
+The library samples with Python's standard `random` module, so call `random.seed(...)` before a run to make it reproducible. For example `random.seed(42)` then `project.get_critical_path_analysis(n=10000)` puts Frontend on the critical path in 614 of 10,000 runs and Backend in 9,386.
+
+## YAML and the command line
+
+A project file has a `project:` block (`name`, `unit`, optional `seed`) and a `tasks:` block keyed by task id. Each task has an optional `name` (it defaults to the task id), an optional `estimator` (default `triangular`), the fields of its distribution and an optional `depends_on` list of task ids.
+
+```yaml
+project:
+  name: "Web App"
+  unit: "days"
+  seed: 42
+
+tasks:
+  design:
+    name: "Design"
+    min_duration: 5
+    mode_duration: 7
+    max_duration: 14
+
+  frontend:
+    name: "Frontend"
+    min_duration: 8
+    mode_duration: 12
+    max_duration: 15
+    depends_on:
+      - design
+
+  backend:
+    name: "Backend"
+    min_duration: 10
+    mode_duration: 15
+    max_duration: 25
+    depends_on:
+      - design
+
+  testing:
+    name: "Testing"
+    min_duration: 2
+    mode_duration: 3
+    max_duration: 5
+    depends_on:
+      - frontend
+      - backend
+```
+
+```
+planaco stats project.yaml
+```
+
+With `seed: 42` this prints, for 10,000 simulations: mean 28.7 days, median (P50) 28.5, standard deviation 3.6, min 19.1, max 41.4, P10 24.1, P85 32.7, P90 33.6, P95 35.1, and a 95% confidence interval of [21.6, 35.9] days.
+
+## Commands
+
+- `planaco init [OUTPUT] [-n NAME]`: create a template YAML project file (default `planaco_project.yaml`). It writes a starter template, not the example above.
+- `planaco stats CONFIG_FILE [-n N] [--json] [--seed N]`: calculate and display project statistics.
+- `planaco run CONFIG_FILE [-n N] [-o FILE] [-f json|csv] [--seed N]`: run the simulation and export results (stdout by default).
+- `planaco plot CONFIG_FILE [-n N] [-o FILE] [--cumulative] [--kde] [-p PERCENTILE ...] [--seed N]`: draw a histogram or cumulative plot. Pass `-o FILE`: SVG works as installed, PNG also needs the Cairo system library.
+- `planaco graph CONFIG_FILE [-o FILE] [--no-durations]`: draw the task dependency graph. Pass `-o FILE` to save it.
+
+## Distributions
+
+The `estimator` value and the YAML fields each one takes:
+
+- `triangular` (default): `min_duration`, `mode_duration`, `max_duration`. A three-point estimate.
+- `pert`: `min_duration`, `mode_duration`, `max_duration`, optional `lamb`. Smoother than triangular, more weight on the mode.
+- `uniform`: `min_duration`, `max_duration`. Equal probability across the range.
+- `normal`: `mean`, `std_dev`, optional `min_value`, `max_value`. Gaussian, always truncated below at `min_value` (default 0), optionally above at `max_value`.
+- `lognormal`: `mean`, `std_dev`, optional `min_value`, `max_value`. Right-skewed: most runs land near the estimate and a few overrun badly.
+- `beta`: `alpha`, `beta`, `max_value`, optional `min_value`. A flexible shape.
+
+## Links
+
+- [Documentation (README)](https://github.com/sepam/planaco#readme)
+- [Source](https://github.com/sepam/planaco)
+- [PyPI](https://pypi.org/project/planaco/)
+- [Changelog](https://github.com/sepam/planaco/blob/master/CHANGELOG.md)
+- [License](https://github.com/sepam/planaco/blob/master/LICENSE.md)
+- [Website](https://sepam.github.io/planaco/)

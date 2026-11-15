@@ -1,291 +1,483 @@
-/* ============================================================
-   Chart rendering — reads brand tokens from CSS so charts
-   re-theme on light/dark toggle. Mockup data is illustrative.
-   ============================================================ */
-const SVGNS = "http://www.w3.org/2000/svg";
-function v(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-function el(tag, attrs){ const e = document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+/* planaco landing page. Vanilla, no dependencies, no build step.
+   One simulator drives the headline, the chart, the tiles, the plan odds and the criticality rows.
+   The pure helpers (compute, texts, histMarkup) also load under node, which is how the static
+   chart in index.html was rendered; in a browser the file boots the page.
+   Colours and fonts never appear here: the SVG carries classes and style.css paints them. */
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else if (root && root.document) api.boot(root.document, root);
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
 
-// Bell-ish histogram heights (0-100), modeIndex marks the gold bar.
-const HEIGHTS = [2,4,7,12,20,30,43,58,72,85,95,100,96,88,76,63,50,38,28,20,13,8,5,3,2,1];
-const X_MIN = 14, X_MAX = 30, MODE_INDEX = 11;
+  var N = 10000, BINS = 26, SEED = 42, STARS_SHOWN_FROM = 50, ANNOUNCE_AFTER_MS = 500;
+  var TASKS = [
+    { key: "design",   label: "Design" },
+    { key: "frontend", label: "Frontend" },
+    { key: "backend",  label: "Backend" },
+    { key: "testing",  label: "Testing" }
+  ];
+  var PARAMS = ["min", "mode", "max"];
+  var PARAM_WORDS = ["minimum", "most likely", "maximum"];
 
-function percentileIndex(p){
-  const total = HEIGHTS.reduce((a,b)=>a+b,0);
-  let cum = 0;
-  for(let i=0;i<HEIGHTS.length;i++){ cum += HEIGHTS[i]; if(cum/total >= p) return i; }
-  return HEIGHTS.length-1;
-}
+  /* ---------- pure: the numbers ---------- */
 
-/* Data-driven histogram renderer.
-   model: {values:number[], xMin, xMax, modeIndex, marks:[{value,color,label}]}
-   opts:  {compact?:bool, animate?:bool, xTicks?:number[]} */
-function renderHist(svg, model, opts = {}){
-  svg.innerHTML = "";
-  const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
-  const padL = opts.compact ? 8 : 48, padR = opts.compact ? 8 : 20;
-  const padT = 18, padB = opts.compact ? 14 : 38;
-  const plotW = W - padL - padR, plotH = H - padT - padB, base = padT + plotH;
-  const n = model.values.length;
-  const step = plotW / n, bw = step * 0.78;
-  const peak = Math.max(...model.values) || 1;
+  /* Same recipe as the static values in the markup: seed 42, re-created for every run. */
+  function compute(MC, tasks) {
+    var det = MC.simulateDetailed(tasks, N, MC.mulberry32(SEED));
+    var s = MC.summarize(det.samples, BINS);
+    var naive = MC.naiveEstimate(tasks);
+    var longer = tasks.frontend[1] > tasks.backend[1] ? "frontend" : "backend";
+    var medianIndex = Math.max(0, Math.min(BINS - 1, Math.floor((s.p50 - s.min) / s.binWidth)));
+    return {
+      n: N, min: s.min, max: s.max, binWidth: s.binWidth, counts: s.counts, medianIndex: medianIndex,
+      p50: s.p50, p85: s.p85, p95: s.p95, certain: s.max - s.min < 1e-9,
+      naive: naive, chance: MC.chanceBy(s.sorted, naive), longer: longer,
+      critical: det.critical, tasks: tasks
+    };
+  }
 
-  const bar = v('--chart-bar'), barStroke = v('--chart-bar-stroke'), gold = v('--gold');
-  const grid = v('--chart-grid'), axis = v('--chart-axis'), muted = v('--text-muted');
+  function pctText(frac) {
+    var p = frac * 100;
+    if (p > 0 && p < 0.5) return "<1%";
+    if (p < 100 && p >= 99.5) return ">99%";
+    return Math.round(p) + "%";
+  }
 
-  if(!opts.compact){
-    for(let g = 0; g <= 4; g++){
-      const y = padT + plotH * (g / 4);
-      svg.appendChild(el('line', {x1: padL, y1: y, x2: padL + plotW, y2: y, stroke: grid, 'stroke-width': 1}));
+  function label(key) {
+    for (var i = 0; i < TASKS.length; i++) if (TASKS[i].key === key) return TASKS[i].label;
+    return key;
+  }
+
+  /* Every string the page shows for a result, keyed by its data-out name.
+     The median is exact to one decimal: rounding it up would overstate the coin flip.
+     P85 and P95 round up, which only makes a promise more conservative. */
+  function texts(r) {
+    var t = r.tasks, p50 = r.p50.toFixed(1), p85 = String(Math.ceil(r.p85)), p95 = String(Math.ceil(r.p95));
+    return {
+      p50: p50, p85: p85, p95: p95, naive: String(r.naive), chance: pctText(r.chance),
+      verdict: r.certain ? "is certain." : "is a coin flip.",
+      half: r.certain ? "Every run took the same." : "Half the runs took longer.",
+      flip: r.certain ? "Certain" : "Coin flip",
+      sum: "Design " + t.design[1] + " + " + label(r.longer) + " " + t[r.longer][1] + " + Testing " + t.testing[1],
+      chart: "Histogram of " + r.n.toLocaleString("en-US") + " simulated runs of the plan, from " +
+        Math.floor(r.min) + " to " + Math.ceil(r.max) + " days. " +
+        (r.certain ? "Every run takes " + p50 + " days. " : "The median is " + p50 + " days; 85% finish within " + p85 + " and 95% within " + p95 + ". ") +
+        "The plan's " + r.naive + " days is met in " + pctText(r.chance) + " of runs.",
+      status: (r.certain ? "Every run takes " + p50 + " days. " : "Median " + p50 + " days. ") +
+        "The plan's " + r.naive + " days is met in " + pctText(r.chance) + " of runs. Safe to promise " + p85 + " days, near-certain " + p95 + "."
+    };
+  }
+
+  /* ---------- pure: the chart ---------- */
+
+  function f(x) { return (Math.round(x * 10) / 10).toString(); }
+
+  function tickStep(span, maxTicks) {
+    var steps = [1, 2, 5, 10, 20, 50];
+    for (var i = 0; i < steps.length; i++) if (span / steps[i] <= maxTicks) return steps[i];
+    return 100;
+  }
+
+  /* One lane of labels, sorted by x. Each label must keep its mark under it (minC..maxC is the
+     range its centre may take) and stay `gap` clear of its neighbours. Returns the centres
+     nearest each mark, or null when the lane cannot hold them. */
+  function solveLane(items, lo, hi, gap) {
+    var n = items.length, L = [], R = [], c = [], i, v;
+    for (i = 0; i < n; i++) {
+      v = Math.max(items[i].minC, lo + items[i].w / 2);
+      if (i) v = Math.max(v, L[i - 1] + (items[i - 1].w + items[i].w) / 2 + gap);
+      L.push(v);
     }
+    for (i = n - 1; i >= 0; i--) {
+      v = Math.min(items[i].maxC, hi - items[i].w / 2);
+      if (i < n - 1) v = Math.min(v, R[i + 1] - (items[i].w + items[i + 1].w) / 2 - gap);
+      R[i] = v;
+    }
+    for (i = 0; i < n; i++) if (L[i] > R[i] + 0.01) return null;
+    for (i = 0; i < n; i++) {
+      v = Math.max(L[i], Math.min(R[i], items[i].x));
+      if (i) v = Math.max(v, c[i - 1] + (items[i - 1].w + items[i].w) / 2 + gap);
+      c.push(Math.min(v, R[i]));
+    }
+    return c;
   }
-  model.values.forEach((hv, i) => {
-    const x = padL + i * step + (step - bw) / 2;
-    const bh = plotH * hv / peak;
-    const isMode = i === model.modeIndex;
-    const r = el('rect', {x: x, y: base - bh, width: bw, height: bh, rx: 1.5,
-      fill: isMode ? gold : bar, stroke: isMode ? gold : barStroke, 'stroke-width': 1});
-    if(opts.animate){ r.classList.add('bar-rise'); r.style.setProperty('--i', i); }
-    svg.appendChild(r);
-  });
-  svg.appendChild(el('line', {x1: padL, y1: base, x2: padL + plotW, y2: base, stroke: axis, 'stroke-width': 1}));
 
-  const span = (model.xMax - model.xMin) || 1;  // degenerate case: all sliders equal
-  const xPos = val => padL + (val - model.xMin) / span * plotW;
-  (opts.xTicks || []).forEach(val => {
-    const t = el('text', {x: xPos(val), y: base + 22, fill: muted, 'font-size': 12,
-      'text-anchor': 'middle', 'font-family': 'JetBrains Mono, monospace'});
-    t.textContent = Math.round(val); svg.appendChild(t);
-  });
-  (model.marks || []).forEach(m => {
-    const x = xPos(m.value);
-    const line = el('line', {x1: x, y1: padT, x2: x, y2: base, stroke: m.color, 'stroke-width': 2, 'stroke-dasharray': '5 4'});
-    const lbl = el('text', {x: x + 6, y: padT + 13, fill: m.color, 'font-size': 12, 'font-weight': 600,
-      'font-family': 'JetBrains Mono, monospace'});
-    lbl.textContent = m.label;
-    if(opts.animate){ line.classList.add('mark-in'); lbl.classList.add('mark-in'); }
-    svg.appendChild(line); svg.appendChild(lbl);
-  });
-}
-
-/* Static illustrative model built from the prototype HEIGHTS data. */
-function staticModel(withMarks){
-  const idxVal = i => X_MIN + (i + 0.5) / HEIGHTS.length * (X_MAX - X_MIN);
-  return {
-    values: HEIGHTS, xMin: X_MIN, xMax: X_MAX, modeIndex: MODE_INDEX,
-    marks: withMarks ? [
-      {value: idxVal(percentileIndex(0.50)), color: v('--gold'),  label: 'P50'},
-      {value: idxVal(percentileIndex(0.85)), color: v('--amber'), label: 'P85'},
-      {value: idxVal(percentileIndex(0.95)), color: v('--coral'), label: 'P95'},
-    ] : [],
-  };
-}
-
-function drawHero(animate){
-  const svg = document.getElementById('heroHist');
-  if(!svg) return;
-  renderHist(svg, staticModel(true), {animate: animate, xTicks: [14, 18, 22, 26, 30]});
-}
-
-function drawHistogram(id, opts){
-  const svg = document.getElementById(id);
-  if(!svg) return;
-  renderHist(svg, staticModel(!opts.compact), {compact: opts.compact, xTicks: opts.compact ? [] : [14, 18, 22, 26, 30]});
-}
-
-function drawPointEstimate(id){
-  const svg = document.getElementById(id);
-  if(!svg) return;
-  svg.innerHTML = "";
-  const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
-  const padL=8, padR=8, padT=18, padB=14;
-  const plotW=W-padL-padR, plotH=H-padT-padB, base=padT+plotH;
-  const axis=v('--chart-axis'), coral=v('--coral'), muted=v('--text-muted');
-  // single lonely bar at the "21 days" position (mode index), full height
-  const step = plotW / HEIGHTS.length, bw = step*0.78;
-  const x = padL + MODE_INDEX*step + (step-bw)/2;
-  svg.appendChild(el('rect',{x:x, y:padT, width:bw, height:plotH, rx:1.5, fill:coral, opacity:0.85}));
-  const lbl=el('text',{x:x+bw/2, y:padT-4, fill:coral, 'font-size':12, 'font-weight':600, 'text-anchor':'middle', 'font-family':'JetBrains Mono, monospace'});
-  lbl.textContent='21'; svg.appendChild(lbl);
-  svg.appendChild(el('line',{x1:padL,y1:base,x2:padL+plotW,y2:base,stroke:axis,'stroke-width':1}));
-}
-
-/* ---- distribution sparklines ---- */
-function pdfSamples(kind){
-  const n=60, xs=[]; for(let i=0;i<n;i++) xs.push(i/(n-1));
-  const f = {
-    triangular: x=>{ const a=0.1,m=0.45,b=0.95; if(x<a||x>b) return 0; return x<m ? (x-a)/(m-a) : (b-x)/(b-m); },
-    pert:       x=>Math.pow(x,2.2)*Math.pow(1-x,1.6),
-    uniform:    x=> (x>=0.1 && x<=0.9) ? 1 : 0,
-    normal:     x=>Math.exp(-Math.pow((x-0.5)/0.16,2)/2),
-    lognormal:  x=>{ if(x<=0.02) return 0; const t=(x)*3; return Math.exp(-Math.pow(Math.log(t)+0.2,2)/(2*0.45*0.45))/t; },
-    beta:       x=>Math.pow(x,1.6)*Math.pow(1-x,3.2),
-  }[kind];
-  const ys = xs.map(f); const mx=Math.max(...ys)||1; return ys.map(y=>y/mx);
-}
-function sparkSVG(kind){
-  const W=240,H=56,pad=4, plotH=H-pad*2;
-  const ys=pdfSamples(kind);
-  let d=`M ${pad} ${H-pad} `;
-  ys.forEach((y,i)=>{ const x=pad+i/(ys.length-1)*(W-pad*2); d+=`L ${x.toFixed(1)} ${(H-pad-y*plotH).toFixed(1)} `; });
-  d+=`L ${W-pad} ${H-pad} Z`;
-  // mode dot — centered on the peak plateau so flat-topped shapes (uniform) don't pin it to one edge
-  const peak=Math.max(...ys);
-  const mi=Math.round((ys.indexOf(peak)+ys.lastIndexOf(peak))/2);
-  const mx=pad+mi/(ys.length-1)*(W-pad*2), my=H-pad-ys[mi]*plotH;
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-    <path d="${d}" fill="var(--gold-soft)" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/>
-    <circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="3.5" fill="var(--gold)"/>
-  </svg>`;
-}
-const DISTS = [
-  ['Triangular','min · mode · max','triangular'],
-  ['PERT','smooth, mode-weighted','pert'],
-  ['Uniform','equal across range','uniform'],
-  ['Normal','symmetric bell','normal'],
-  ['LogNormal','right-skewed delays','lognormal'],
-  ['Beta','custom shape','beta'],
-];
-function renderDists(){
-  document.getElementById('dists').innerHTML = DISTS.map(([n,w,k])=>
-    `<div class="dist"><h3>${n}</h3><div class="when">${w}</div>${sparkSVG(k)}</div>`).join('');
-}
-
-/* ---- live demo ---- */
-const DEMO_TASKS = [
-  { key: 'design',   label: 'Design',   note: 'blocks Frontend & Backend',   triple: [5, 7, 14] },
-  { key: 'frontend', label: 'Frontend', note: 'after Design ∥ Backend',      triple: [8, 12, 15] },
-  { key: 'backend',  label: 'Backend',  note: 'after Design ∥ Frontend',     triple: [10, 15, 25] },
-  { key: 'testing',  label: 'Testing',  note: 'waits for both tracks',       triple: [2, 3, 5] },
-];
-const PARAMS = ['min', 'mode', 'max'];
-
-function buildDemoControls(){
-  const host = document.getElementById('demoControls');
-  if(!host) return;
-  host.innerHTML = DEMO_TASKS.map(t => `
-    <fieldset class="demo-task" data-key="${t.key}">
-      <div class="task-head"><span class="task-name">${t.label}</span><span class="task-note">${t.note}</span></div>
-      ${PARAMS.map((p, i) => `
-        <div class="demo-row">
-          <label class="p-label" for="${t.key}-${p}">${p}</label>
-          <input type="range" id="${t.key}-${p}" min="1" max="40" step="1"
-                 value="${t.triple[i]}" data-key="${t.key}" data-which="${i}"
-                 aria-label="${t.label} ${p} duration in days" />
-          <span class="p-value"><span id="${t.key}-${p}-value">${t.triple[i]}</span><span class="p-unit">days</span></span>
-        </div>`).join('')}
-    </fieldset>`).join('');
-  host.addEventListener('input', onDemoInput);
-}
-
-function onDemoInput(e){
-  const input = e.target;
-  if(input.type !== 'range') return;
-  const key = input.dataset.key, which = Number(input.dataset.which);
-  const task = DEMO_TASKS.find(t => t.key === key);
-  const triple = task.triple.slice();
-  triple[which] = Number(input.value);
-  task.triple = PlanacoMC.clampTriple(triple, which);
-  PARAMS.forEach((p, i) => {
-    document.getElementById(`${key}-${p}`).value = task.triple[i];
-    document.getElementById(`${key}-${p}-value`).textContent = task.triple[i];
-  });
-  scheduleDemo();
-}
-
-let demoPending = false;
-function scheduleDemo(){
-  if(demoPending) return;
-  demoPending = true;
-  requestAnimationFrame(() => { demoPending = false; runDemo(); });
-}
-
-function runDemo(){
-  const svg = document.getElementById('demoHist');
-  if(!svg) return;
-  const tasks = {};
-  DEMO_TASKS.forEach(t => { tasks[t.key] = t.triple; });
-  const samples = PlanacoMC.simulate(tasks, 10000);
-  const s = PlanacoMC.summarize(samples, 26);
-  renderHist(svg, {
-    values: s.counts, xMin: s.min, xMax: s.max, modeIndex: s.modeIndex,
-    marks: [
-      {value: s.p50, color: v('--gold'),  label: 'P50'},
-      {value: s.p85, color: v('--amber'), label: 'P85'},
-      {value: s.p95, color: v('--coral'), label: 'P95'},
-    ],
-  }, {xTicks: [0, 0.25, 0.5, 0.75, 1].map(f => s.min + f * (s.max - s.min))});
-  document.getElementById('statP50').textContent = String(Math.ceil(s.p50));
-  document.getElementById('statP85').textContent = String(Math.ceil(s.p85));
-  document.getElementById('statP95').textContent = String(Math.ceil(s.p95));
-}
-
-function renderAll(opts = {}){
-  drawHero(!!opts.animateHero);
-  drawHistogram('probHist', {compact:true});
-  drawPointEstimate('ptEstimate');
-  renderDists();
-  runDemo();
-}
-
-/* ---- theme toggle ---- */
-const toggle = document.getElementById('themeToggle');
-function syncToggleIcon(){
-  toggle.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '🌙' : '☀️';
-}
-toggle.addEventListener('click', ()=>{
-  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  try { localStorage.setItem('theme', next); } catch (e) {}
-  syncToggleIcon();
-  renderAll();
-});
-syncToggleIcon();
-
-/* ---- copy ---- */
-document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
-  navigator.clipboard?.writeText(c.dataset.copy); const o=c.textContent; c.textContent='copied'; c.classList.add('copied'); setTimeout(()=>{c.textContent=o; c.classList.remove('copied');},1200);
-}));
-
-/* ---- GitHub stars (fail-silent) ---- */
-(async function loadStars(){
-  try {
-    const r = await fetch('https://api.github.com/repos/sepam/planaco');
-    if (!r.ok) return;
-    const data = await r.json();
-    const n = data.stargazers_count;
-    if (typeof n !== 'number') return;
-    document.getElementById('starCount').textContent =
-      n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n);
-    document.getElementById('starWrap').hidden = false;
-  } catch (e) { /* leave the plain GitHub button */ }
-})();
-
-/* ---- code tabs ---- */
-(function initTabs(){
-  const list = document.querySelector('.tabs');
-  if(!list) return;
-  const tabs = Array.from(list.querySelectorAll('[role="tab"]'));
-  function select(tab){
-    tabs.forEach(t => {
-      const on = t === tab;
-      t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
-      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  /* Direct labels above the plot, each straight over its line.
+     Marks nearer than 16px share one label and one line. One lane when it fits;
+     otherwise the outer labels take the lane by the plot and the inner ones the lane above,
+     so a line never has to bend and never runs through another label. */
+  function placeLabels(marks, W) {
+    var GAP = 10, EDGE = 2, INSET = 4, CLEAR = 5;
+    var sorted = marks.slice().sort(function (a, b) { return a.x - b.x || a.order - b.order; });
+    var groups = [];
+    sorted.forEach(function (m) {
+      var g = groups[groups.length - 1];
+      if (g && m.x - g.last < 16) { g.members.push(m); g.last = m.x; }
+      else groups.push({ members: [m], last: m.x });
     });
-    tab.focus();
-  }
-  list.addEventListener('click', e => {
-    const tab = e.target.closest('[role="tab"]');
-    if(tab) select(tab);
-  });
-  list.addEventListener('keydown', e => {
-    const i = tabs.indexOf(document.activeElement);
-    if(i < 0) return;
-    if(e.key === 'ArrowRight') select(tabs[(i + 1) % tabs.length]);
-    if(e.key === 'ArrowLeft')  select(tabs[(i - 1 + tabs.length) % tabs.length]);
-  });
-})();
+    groups.forEach(function (g) {
+      var byOrder = g.members.slice().sort(function (a, b) { return a.order - b.order; });
+      g.text = byOrder.map(function (m) { return m.text; }).join(", ");
+      g.plan = byOrder.some(function (m) { return m.kind === "plan"; });
+      g.kind = g.plan ? "plan" : (g.members.length === 1 ? g.members[0].kind : "pct");
+      g.x = g.members.reduce(function (a, m) { return a + m.x; }, 0) / g.members.length;
+      g.w = g.text.length * 7.7 + (g.plan ? 16 : 2);
+      g.minC = g.x - g.w / 2 + INSET; g.maxC = g.x + g.w / 2 - INSET;
+      g.lane = 0;
+    });
+    var c = solveLane(groups, EDGE, W - EDGE, GAP);
+    if (c) { groups.forEach(function (g, i) { g.cx = c[i]; }); return { groups: groups, lanes: 1 }; }
 
-buildDemoControls();
-renderAll({animateHero: true});
+    var n = groups.length;
+    var low = n >= 3 ? [groups[0], groups[n - 1]] : [groups[0]];
+    var high = groups.filter(function (g) { return low.indexOf(g) < 0; });
+    var lowItems = low.map(function (g) {
+      var i = groups.indexOf(g), o = { x: g.x, w: g.w, minC: g.minC, maxC: g.maxC };
+      if (i > 0) o.minC = Math.max(o.minC, groups[i - 1].x + CLEAR + g.w / 2);
+      if (i < n - 1) o.maxC = Math.min(o.maxC, groups[i + 1].x - CLEAR - g.w / 2);
+      return o;
+    });
+    var cl = solveLane(lowItems, EDGE, W - EDGE, GAP), ch = solveLane(high, EDGE, W - EDGE, GAP);
+    if (cl && ch) {
+      low.forEach(function (g, i) { g.cx = cl[i]; g.lane = 0; });
+      high.forEach(function (g, i) { g.cx = ch[i]; g.lane = 1; });
+      return { groups: groups, lanes: 2 };
+    }
+    // marks crowded against an edge: a lane each. A line runs down through the lanes below its
+    // label, so a label only has to stay clear of the lines that start above it. Try the orders.
+    var best = null;
+    permutations(n).some(function (laneOf) {
+      var cx = [];
+      for (var i = 0; i < n; i++) {
+        var g = groups[i], left = EDGE, right = W - EDGE;
+        for (var j = 0; j < n; j++) {
+          if (laneOf[j] <= laneOf[i]) continue;
+          if (groups[j].x < g.x) left = Math.max(left, groups[j].x + CLEAR);
+          else right = Math.min(right, groups[j].x - CLEAR);
+        }
+        var loC = Math.max(left + g.w / 2, g.minC), hiC = Math.min(right - g.w / 2, g.maxC);
+        if (loC > hiC + 0.01) return false;
+        cx.push(Math.max(loC, Math.min(hiC, g.x)));
+      }
+      best = { laneOf: laneOf, cx: cx };
+      return true;
+    });
+    if (best) groups.forEach(function (g, i) { g.cx = best.cx[i]; g.lane = best.laneOf[i]; });
+    else groups.forEach(function (g, i) { g.cx = Math.max(EDGE + g.w / 2, Math.min(W - EDGE - g.w / 2, g.x)); g.lane = i; });  // cannot happen while the chart is wider than a label
+    return { groups: groups, lanes: n };
+  }
+
+  function permutations(n) {
+    var out = [];
+    (function walk(rest, acc) {
+      if (!rest.length) { out.push(acc); return; }
+      rest.forEach(function (v, i) { walk(rest.slice(0, i).concat(rest.slice(i + 1)), acc.concat(v)); });
+    })(Array.apply(null, { length: n }).map(function (_, i) { return i; }), []);
+    return out;
+  }
+
+  /* r: a compute() result. W, H: the drawing size in CSS pixels, so type stays true to size.
+     The gold bar is the bin that holds the median, the number the headline states. */
+  function histMarkup(r, W, H) {
+    var padX = 14, base = H - 48, plotW = W - padX * 2;
+    var n = r.counts.length;
+    var lo = Math.min(r.min, r.naive), hi = Math.max(r.min + n * r.binWidth, r.naive);
+    if (r.certain) { lo = Math.max(0, r.min - 5); hi = lo + 10; }           // one value: a ten-day window around it
+    else if (hi - lo < 4) { var mid = (lo + hi) / 2; lo = Math.max(0, mid - 2); hi = lo + 4; }  // never an axis without ticks
+    var span = hi - lo;
+    function X(v) { return padX + (v - lo) / span * plotW; }
+    var bw = r.certain ? 20 : Math.max(1, Math.min(24, r.binWidth / span * plotW * 0.84));
+    function barCentre(i) { return r.certain ? X(r.min) : X(r.min + (i + 0.5) * r.binWidth); }
+    var t = texts(r), out = [], i;
+
+    // markers, each labelled with its value: the plan (solid, a diamond), the median (a stem down
+    // to the gold bar) and P85, P95 (dashed lines). With no spread there is one fact, so one label.
+    var mi = r.medianIndex, stemX = Math.max(barCentre(mi) - bw / 2 + 1, Math.min(barCentre(mi) + bw / 2 - 1, X(r.p50)));
+    var marks = r.certain
+      ? [{ kind: "median", text: "Every run " + t.p50, x: barCentre(mi), order: 0 }]
+      : [
+        { kind: "plan", text: "Plan " + t.naive, x: X(r.naive), order: 0 },
+        { kind: "median", text: "P50 " + t.p50, x: stemX, order: 1 },
+        { kind: "pct", text: "P85 " + t.p85, x: X(r.p85), order: 2 },
+        { kind: "pct", text: "P95 " + t.p95, x: X(r.p95), order: 3 }
+      ];
+    var placed = placeLabels(marks, W);
+
+    // the plot starts under the label lanes: one or two lanes fit the usual headroom, more push it down
+    var LANE = 18, topY = placed.lanes === 1 ? 15 : 13;
+    var plotTop = Math.max(48, topY + LANE * (placed.lanes - 1) + 17), plotH = base - plotTop;
+    var peak = Math.max.apply(null, r.counts) || 1;
+    function barHeight(k) { return r.counts[k] ? Math.max(1, plotH * r.counts[k] / peak) : 0; }
+
+    // bars: baseline at zero, a hair of gap
+    for (i = 0; i < n; i++) {
+      var bh = barHeight(i);
+      if (!bh) continue;
+      out.push('<rect class="ch-bar' + (i === mi ? " ch-bar--median" : "") + '" x="' + f(barCentre(i) - bw / 2) + '" y="' + f(base - bh) +
+        '" width="' + f(bw) + '" height="' + f(bh) + '"/>');
+    }
+
+    // x axis: the baseline, whole-day ticks, the unit
+    out.push('<line class="ch-base" x1="' + padX + '" y1="' + f(base) + '" x2="' + f(W - padX) + '" y2="' + f(base) + '"/>');
+    var stepDays = tickStep(span, W < 420 ? 5 : 8);
+    for (var d = Math.ceil(lo / stepDays - 1e-9) * stepDays; d <= hi + 1e-9; d += stepDays) {
+      var tx = X(d);
+      out.push('<line class="ch-base" x1="' + f(tx) + '" y1="' + f(base) + '" x2="' + f(tx) + '" y2="' + f(base + 5) + '"/>');
+      out.push('<text class="ch-tick" x="' + f(tx) + '" y="' + f(base + 20) + '" text-anchor="middle">' + d + "</text>");
+    }
+    out.push('<text class="ch-axis" x="' + f(W / 2) + '" y="' + f(H - 6) + '" text-anchor="middle">Days to finish</text>');
+
+    // every line drops straight from under its label; the median's stops at the top of the gold bar
+    placed.groups.forEach(function (g) {
+      var y = topY + LANE * (placed.lanes - 1 - g.lane);
+      var end = g.kind === "median" ? base - barHeight(mi) - 3 : base;
+      var path = "M" + f(g.x) + " " + (y + 7) + "V" + f(Math.max(end, y + 9));
+      out.push('<path class="ch-halo" d="' + path + '"/>');
+      out.push('<path class="ch-mark ch-mark--' + g.kind + '" d="' + path + '"/>');
+      if (g.plan) {
+        var left = g.cx - g.w / 2;
+        out.push('<path class="ch-diamond" d="M' + f(g.x) + " " + f(base - 6) + 'l6 6l-6 6l-6 -6z"/>');
+        out.push('<path class="ch-diamond" d="M' + f(left + 5) + " " + (y - 9.5) + 'l5 5l-5 5l-5 -5z"/>');
+        out.push('<text class="ch-label" x="' + f(left + 14) + '" y="' + y + '">' + g.text + "</text>");
+      } else {
+        out.push('<text class="ch-label" x="' + f(g.cx) + '" y="' + y + '" text-anchor="middle">' + g.text + "</text>");
+      }
+    });
+    return out.join("");
+  }
+
+  /* ---------- the page ---------- */
+
+  function boot(doc, win) {
+    var html = doc.documentElement;
+    var $ = function (id) { return doc.getElementById(id); };
+    function setText(el, t) { if (el && el.textContent !== t) el.textContent = t; }
+
+    /* theme toggle: stored choice, else the OS preference (the inline head script set data-theme) */
+    var toggle = $("themeToggle");
+    function syncToggle() {
+      var dark = html.getAttribute("data-theme") === "dark";
+      toggle.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+    }
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        var next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        html.setAttribute("data-theme", next);
+        try { win.localStorage.setItem("theme", next); } catch (e) { /* private mode: the choice lasts the visit */ }
+        syncToggle();
+      });
+      syncToggle();
+    }
+
+    /* copy buttons: say "Copied" only when the clipboard took it.
+       data-copy holds the text; data-copy-from names the element whose text is copied. */
+    function legacyCopy(text) {
+      var ta = doc.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.className = "visually-hidden";
+      doc.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = doc.execCommand("copy"); } catch (e) { ok = false; }
+      doc.body.removeChild(ta);
+      return ok;
+    }
+    Array.prototype.forEach.call(doc.querySelectorAll(".copy"), function (btn) {
+      var lbl = btn.querySelector(".copy__label") || btn;
+      var rest = lbl.textContent, timer = null;
+      function done(ok) {
+        if (!ok) return;
+        lbl.textContent = "Copied";
+        win.clearTimeout(timer);
+        timer = win.setTimeout(function () { lbl.textContent = rest; }, 1600);
+      }
+      btn.addEventListener("click", function () {
+        var from = btn.getAttribute("data-copy-from"), src = from ? $(from) : null;
+        var text = src ? src.textContent.trim() : (btn.getAttribute("data-copy") || "");
+        var cb = win.navigator && win.navigator.clipboard;
+        if (cb && cb.writeText) cb.writeText(text).then(function () { done(true); }, function () { done(legacyCopy(text)); });
+        else done(legacyCopy(text));
+      });
+    });
+
+    /* GitHub stars: fail-silent, shown only once there are enough to be worth a look, and asked
+       for at most once a day (the unauthenticated API allows 60 requests an hour per address) */
+    (function loadStars() {
+      var wrap = $("starWrap"), count = $("starCount"), KEY = "planaco-stars", DAY = 24 * 60 * 60 * 1000;
+      if (!wrap || !count) return;
+      function show(n) {
+        if (typeof n !== "number" || n < STARS_SHOWN_FROM) return;
+        count.textContent = n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : String(n);
+        wrap.hidden = false;
+      }
+      function remember(n) {
+        try { win.localStorage.setItem(KEY, JSON.stringify({ n: n, t: Date.now() })); } catch (e) { /* no storage: ask again next load */ }
+      }
+      var saved = null;
+      try { saved = JSON.parse(win.localStorage.getItem(KEY)); } catch (e) { saved = null; }
+      if (saved && typeof saved.t === "number" && Date.now() - saved.t < DAY && Date.now() >= saved.t) { show(saved.n); return; }
+      if (!win.fetch) return;
+      win.fetch("https://api.github.com/repos/sepam/planaco").then(function (r) {
+        return r.ok ? r.json() : null;
+      }).then(function (data) {
+        var n = data && typeof data.stargazers_count === "number" ? data.stargazers_count : null;
+        remember(n);   // a refusal is remembered too, so a rate-limited visitor is not asked again today
+        show(n);
+      }).catch(function () { /* offline: the plain link stays */ });
+    })();
+
+    /* code tabs: every panel is in the markup and visible without script; here they become tabs */
+    (function initTabs() {
+      var list = doc.querySelector(".tabs");
+      if (!list) return;
+      var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+      function select(tab, focus) {
+        tabs.forEach(function (t) {
+          var on = t === tab;
+          t.setAttribute("aria-selected", String(on));
+          t.tabIndex = on ? 0 : -1;
+          var panel = $(t.getAttribute("aria-controls"));
+          if (panel) panel.hidden = !on;
+        });
+        if (focus) tab.focus();
+      }
+      list.addEventListener("click", function (e) {
+        var tab = e.target.closest('[role="tab"]');
+        if (tab) select(tab, true);
+      });
+      list.addEventListener("keydown", function (e) {
+        var i = tabs.indexOf(doc.activeElement), to = -1;
+        if (i < 0) return;
+        if (e.key === "ArrowRight") to = (i + 1) % tabs.length;
+        else if (e.key === "ArrowLeft") to = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === "Home") to = 0;
+        else if (e.key === "End") to = tabs.length - 1;
+        if (to < 0) return;
+        e.preventDefault();
+        select(tabs[to], true);
+      });
+      select(list.querySelector('[aria-selected="true"]') || tabs[0], false);
+    })();
+
+    /* the workbench */
+    var MC = win.PlanacoMC, host = $("demoControls"), svg = $("demoHist");
+    if (!MC || !host || !svg) return;
+
+    var tasks = {}, last = null, ok = true;
+    TASKS.forEach(function (t) {
+      tasks[t.key] = PARAMS.map(function (p) {
+        var input = $(t.key + "-" + p);
+        if (!input) { ok = false; return 0; }
+        return Number(input.value);
+      });
+    });
+    if (!ok) return;
+
+    /* a number may be shown in more than one place (the headline, a tile, the pinned caption, the phone strip) */
+    var outs = {};
+    Array.prototype.forEach.call(doc.querySelectorAll("[data-out]"), function (el) {
+      var k = el.getAttribute("data-out");
+      (outs[k] = outs[k] || []).push(el);
+    });
+
+    function syncInputs(key) {
+      PARAMS.forEach(function (p, i) {
+        var input = $(key + "-" + p), val = tasks[key][i];
+        if (Number(input.value) !== val) input.value = String(val);
+        input.setAttribute("aria-valuetext", val + (val === 1 ? " day" : " days"));
+        setText($(key + "-" + p + "-value"), String(val));
+      });
+    }
+
+    function draw() {
+      if (!last) return;
+      var box = svg.getBoundingClientRect();
+      var W = Math.round(box.width), H = Math.round(box.height);
+      if (W < 40 || H < 40) return;
+      svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+      svg.innerHTML = histMarkup(last, W, H);
+    }
+
+    /* screen readers hear one sentence once the dragging stops, not every frame of it */
+    var status = $("liveStatus"), announce = null;
+    function run(quiet) {
+      var r = last = compute(MC, tasks), t = texts(r);
+      Object.keys(outs).forEach(function (k) { outs[k].forEach(function (el) { setText(el, t[k]); }); });
+      TASKS.forEach(function (task) {
+        var frac = r.critical[task.key] / r.n;
+        setText($("crit-" + task.key), pctText(frac));
+        var bar = $("crit-" + task.key + "-bar");
+        if (bar) bar.style.setProperty("--share", frac.toFixed(4));
+      });
+      svg.setAttribute("aria-label", t.chart);
+      draw();
+      if (quiet || !status) return;
+      win.clearTimeout(announce);
+      announce = win.setTimeout(function () { setText(status, t.status); }, ANNOUNCE_AFTER_MS);
+    }
+
+    var pending = false;
+    function schedule() {
+      if (pending) return;
+      pending = true;
+      win.requestAnimationFrame(function () { pending = false; run(false); });
+    }
+
+    host.addEventListener("input", function (e) {
+      var input = e.target;
+      if (!input || input.type !== "range") return;
+      var key = input.getAttribute("data-key"), which = Number(input.getAttribute("data-which"));
+      if (!tasks[key]) return;
+      var triple = tasks[key].slice();
+      triple[which] = Number(input.value);
+      tasks[key] = MC.clampTriple(triple, which);
+      syncInputs(key);
+      schedule();
+    });
+
+    TASKS.forEach(function (t) {
+      PARAMS.forEach(function (p, i) {
+        var input = $(t.key + "-" + p);
+        input.disabled = false;
+        input.setAttribute("aria-label", t.label + " " + PARAM_WORDS[i] + " duration in days");
+      });
+      syncInputs(t.key);
+    });
+    run(true);
+
+    /* Where the reader is decides two things, both read from geometry so a jump (an anchor,
+       find-in-page, the scrollbar, back and forward) lands in the right state:
+       the pinned chart's caption becomes the live headline once the h1 has left the screen,
+       and on a narrow screen the strip of numbers shows once the tiles have. Both end with the workbench. */
+    var bench = doc.querySelector(".bench"), h1 = doc.querySelector("h1"), tiles = doc.querySelector(".tiles");
+    var strip = doc.querySelector(".strip"), readout = doc.querySelector(".readout");
+    function place() {
+      if (!bench || !h1 || !tiles) return;
+      var b = bench.getBoundingClientRect();
+      var stripH = strip ? strip.getBoundingClientRect().height : 0;
+      if (readout) readout.classList.toggle("is-away", h1.getBoundingClientRect().bottom < 0 && b.bottom > 0);
+      if (strip) strip.classList.toggle("is-on", tiles.getBoundingClientRect().bottom < 0 && b.bottom > stripH * 2.5);
+    }
+    var placing = false;
+    function schedulePlace() {
+      if (placing) return;
+      placing = true;
+      win.requestAnimationFrame(function () { placing = false; place(); });
+    }
+    win.addEventListener("scroll", schedulePlace, { passive: true });
+    win.addEventListener("hashchange", schedulePlace);
+    win.addEventListener("pageshow", schedulePlace);
+    win.addEventListener("resize", function () { schedulePlace(); win.requestAnimationFrame(draw); });
+    place();
+
+    if (win.ResizeObserver) {
+      var seen = 0;
+      new win.ResizeObserver(function (entries) {
+        var w = Math.round(entries[0].contentRect.width);
+        if (w !== seen) { seen = w; win.requestAnimationFrame(draw); }
+      }).observe(svg);
+    }
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(draw, function () {});
+  }
+
+  return { compute: compute, pctText: pctText, texts: texts, histMarkup: histMarkup, boot: boot };
+});
