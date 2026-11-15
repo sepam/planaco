@@ -29,6 +29,71 @@
     return out;
   }
 
+  /* Seeded PRNG (mulberry32): returns () => number in [0, 1).
+     The page uses one fixed seed so dragging a slider morphs the histogram
+     smoothly and static fallback numbers match what the script computes. */
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* Same sampling order and arithmetic as simulate(), plus per-task
+     criticality counts (runs in which each task was on the critical path).
+
+     Tie rule mirrors planaco's Project._get_critical_tasks_for_run
+     (src/planaco/project.py): CPM forward/backward pass, and a task is
+     critical iff abs(slack) < 1e-9. On this DAG, slack(frontend) =
+     max(tf, tb) - tf and slack(backend) = max(tf, tb) - tb, so when frontend
+     and backend durations are equal (within 1e-9) in a run, BOTH are counted
+     critical for that run; frontend + backend counts can therefore exceed n.
+     Design and testing have zero slack in every run. */
+  var CRIT_TOL = 1e-9;
+
+  function simulateDetailed(tasks, n, rand) {
+    rand = rand || Math.random;
+    var d = tasks.design, f = tasks.frontend, b = tasks.backend, t = tasks.testing;
+    var out = new Float64Array(n);
+    var cf = 0, cb = 0;
+    for (var i = 0; i < n; i++) {
+      var td = sampleTriangular(d[0], d[1], d[2], rand());
+      var tf = sampleTriangular(f[0], f[1], f[2], rand());
+      var tb = sampleTriangular(b[0], b[1], b[2], rand());
+      var tt = sampleTriangular(t[0], t[1], t[2], rand());
+      var m = Math.max(tf, tb);
+      out[i] = td + m + tt;
+      if (Math.abs(m - tf) < CRIT_TOL) cf++;
+      if (Math.abs(m - tb) < CRIT_TOL) cb++;
+    }
+    return { samples: out,
+             critical: { design: n, frontend: cf, backend: cb, testing: n } };
+  }
+
+  /* The "add up the most-likely numbers" plan along the longest branch. */
+  function naiveEstimate(tasks) {
+    return tasks.design[1] + Math.max(tasks.frontend[1], tasks.backend[1]) +
+           tasks.testing[1];
+  }
+
+  /* Fraction (0..1) of an ascending-sorted sample array that is <= x.
+     Binary search for the first index whose value exceeds x. */
+  function chanceBy(sorted, x) {
+    var len = sorted.length;
+    if (!len) return 0;
+    var lo = 0, hi = len;
+    while (lo < hi) {
+      var mid = (lo + hi) >>> 1;
+      if (sorted[mid] <= x) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo / len;
+  }
+
   function percentile(sorted, p) {
     var idx = (sorted.length - 1) * p;
     var lo = Math.floor(idx), hi = Math.ceil(idx);
@@ -50,6 +115,7 @@
     return {
       min: min, max: max, binWidth: w, counts: counts, modeIndex: modeIndex,
       p50: percentile(s, 0.50), p85: percentile(s, 0.85), p95: percentile(s, 0.95),
+      sorted: s,
     };
   }
 
@@ -69,5 +135,7 @@
   }
 
   return { sampleTriangular: sampleTriangular, simulate: simulate,
-           percentile: percentile, summarize: summarize, clampTriple: clampTriple };
+           percentile: percentile, summarize: summarize, clampTriple: clampTriple,
+           mulberry32: mulberry32, simulateDetailed: simulateDetailed,
+           naiveEstimate: naiveEstimate, chanceBy: chanceBy };
 });

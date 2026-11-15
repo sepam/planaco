@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>planaco · Probabilistic Project Planning for Python</title>
-<meta name="description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
+<title>planaco: Monte Carlo project estimation for Python</title>
+<meta name="description" content="planaco runs your project plan through 10,000 Monte Carlo simulations and reports the P50, P85 and P95 finish dates, so you can commit to a date you can defend. A Python library and CLI." />
 <link rel="canonical" href="https://sepam.github.io/planaco/" />
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="planaco" />
-<meta property="og:title" content="planaco · Probabilistic Project Planning for Python" />
-<meta property="og:description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
+<meta property="og:title" content="planaco: Monte Carlo project estimation for Python" />
+<meta property="og:description" content="planaco runs your project plan through 10,000 Monte Carlo simulations and reports the P50, P85 and P95 finish dates, so you can commit to a date you can defend. A Python library and CLI." />
 <meta property="og:url" content="https://sepam.github.io/planaco/" />
 <meta property="og:image" content="https://sepam.github.io/planaco/assets/og-card.png" />
 <meta property="og:image:width" content="1280" />
 <meta property="og:image:height" content="640" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="planaco · Probabilistic Project Planning for Python" />
-<meta name="twitter:description" content="Model tasks as probability distributions and run 10,000 Monte Carlo simulations. Ship honest P50/P85/P95 confidence ranges instead of one optimistic date." />
+<meta name="twitter:title" content="planaco: Monte Carlo project estimation for Python" />
+<meta name="twitter:description" content="planaco runs your project plan through 10,000 Monte Carlo simulations and reports the P50, P85 and P95 finish dates, so you can commit to a date you can defend. A Python library and CLI." />
 <meta name="twitter:image" content="https://sepam.github.io/planaco/assets/og-card.png" />
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
@@ -43,269 +43,444 @@
     var t;
     try { t = localStorage.getItem("theme"); } catch (e) {}
     if (t !== "light" && t !== "dark") {
-      t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
     document.documentElement.setAttribute("data-theme", t);
+    document.documentElement.classList.add("js");
   })();
 </script>
-<meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#061325" media="(prefers-color-scheme: dark)" />
 <meta name="theme-color" content="#f0f6fc" media="(prefers-color-scheme: light)" />
+<link rel="preload" href="assets/tokens.css" as="style" />
+<link rel="preload" href="assets/base.css" as="style" />
 <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
-<!-- ===================== NAV ===================== -->
-<nav>
-  <div class="wrap nav-inner">
-    <a class="brand" href="#top">
-      <svg class="logo" viewBox="0 0 64 64" aria-label="planaco">
-        <rect x="4"  y="44" width="6" height="14" rx="1" fill="var(--text)"/>
-        <rect x="12" y="38" width="6" height="20" rx="1" fill="var(--text)"/>
-        <rect x="20" y="28" width="6" height="30" rx="1" fill="var(--text)"/>
-        <rect x="28" y="18" width="6" height="40" rx="1" fill="var(--gold)"/>
-        <rect x="36" y="28" width="6" height="30" rx="1" fill="var(--text)"/>
-        <rect x="44" y="38" width="6" height="20" rx="1" fill="var(--text)"/>
-        <rect x="52" y="44" width="6" height="14" rx="1" fill="var(--text)"/>
+<nav class="nav" aria-label="Main">
+  <div class="container nav__inner">
+    <a class="brand" href="#top" aria-label="planaco, top of page">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="4" y="44" width="6" height="14" rx="1"/><rect x="12" y="38" width="6" height="20" rx="1"/><rect x="20" y="28" width="6" height="30" rx="1"/><rect class="mark__mode" x="28" y="18" width="6" height="40" rx="1"/><rect x="36" y="28" width="6" height="30" rx="1"/><rect x="44" y="38" width="6" height="20" rx="1"/><rect x="52" y="44" width="6" height="14" rx="1"/>
       </svg>
-      <span class="word">planaco</span>
+      <span class="brand__word">planaco</span>
     </a>
-    <div class="nav-links">
-      <a href="#problem">Why</a>
-      <a href="#demo">Demo</a>
-      <a href="#how">How it works</a>
-      <a href="#code">Code</a>
-      <a href="#distributions">Distributions</a>
-      <button class="toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
-      <a class="nav-cta" href="https://github.com/sepam/planaco">GitHub<span id="starWrap" hidden> · ★ <span id="starCount"></span></span></a>
+    <div class="nav__links">
+      <a class="nav__link" href="#code">Code</a>
+      <a class="nav__link" href="https://github.com/sepam/planaco#readme">Docs</a>
+      <a class="nav__link" href="https://github.com/sepam/planaco">GitHub<span class="stars" id="starWrap" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z"/></svg><span id="starCount"></span><span class="visually-hidden"> stars</span></span></a>
+      <button type="button" class="toggle" id="themeToggle" aria-label="Switch theme">
+        <svg class="toggle__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8 8 0 0 1 9.8 4a8 8 0 1 0 10.2 10.2z"/></svg>
+        <svg class="toggle__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
+      </button>
     </div>
   </div>
 </nav>
 
-<!-- ===================== HERO ===================== -->
-<header class="hero" id="top">
-  <div class="hero-grid"></div>
-  <div class="wrap hero-inner">
-    <div class="hero-copy">
-      <span class="eyebrow"><span class="dot"></span> Monte Carlo project estimation · Python · alpha</span>
-      <h1>Stop guessing dates.<br/>Plan with <span class="accent">distributions</span>.</h1>
-      <p class="sub">Planaco models every task as a probability distribution and runs thousands of Monte Carlo simulations, so you ship honest confidence ranges instead of a single optimistic number.</p>
-      <div class="hero-actions">
-        <div class="install">
-          <span class="prompt">$</span>
-          <span>pip install planaco</span>
-          <button type="button" class="copy" data-copy="pip install planaco">copy</button>
+<main id="main">
+
+<!-- The workbench: the hero and the three panels share one pinned chart, one simulator, one set of numbers.
+     Every number below is what assets/site.js computes for the default plan (n = 10,000, seed 42). -->
+<div class="bench">
+  <div class="container bench__inner">
+
+    <header class="hero" id="top">
+      <div class="hero__copy">
+        <h1>Project estimates you can defend.</h1>
+        <p class="lead">Planaco simulates task uncertainty to show when your project will likely finish.</p>
+        <div class="hero__actions">
+          <div class="install">
+            <code class="install__cmd"><span class="install__prompt" aria-hidden="true">$ </span>pip install planaco</code>
+            <button type="button" class="copy" data-copy="pip install planaco"><span class="copy__label" aria-live="polite">Copy</span></button>
+          </div>
+          <a class="textlink" href="https://github.com/sepam/planaco#readme">Read the docs</a>
         </div>
-        <a class="btn-primary" href="https://github.com/sepam/planaco">View on GitHub</a>
+        <p class="terms">A Python library and CLI. Python 3.8 or newer, MIT licensed.</p>
       </div>
-    </div>
-    <div class="hero-chart" aria-hidden="true">
-      <svg id="heroHist" viewBox="0 0 560 320"></svg>
-    </div>
-  </div>
-</header>
 
-<main>
+      <div class="pin">
+        <figure class="readout">
+          <figcaption class="readout__cap">
+            <span class="readout__result"><span class="readout__k">This plan’s median finish</span><strong><span id="statP50" data-out="p50">28.5</span> days</strong><span data-out="half">Half the runs took longer.</span></span>
+            <a class="readout__link" href="#demo">Change the estimates.</a>
+          </figcaption>
+          <svg class="chart" id="demoHist" viewBox="0 0 560 368" role="img" aria-label="Histogram of 10,000 simulated runs of the plan, from 18 to 42 days. The median is 28.5 days; 85% finish within 33 and 95% within 36. The plan's 25 days is met in 16% of runs."><rect class="ch-bar" x="15.6" y="318.5" width="17.2" height="1.5"/><rect class="ch-bar" x="36.1" y="315.9" width="17.2" height="4.1"/><rect class="ch-bar" x="56.6" y="304.7" width="17.2" height="15.3"/><rect class="ch-bar" x="77" y="278.5" width="17.2" height="41.5"/><rect class="ch-bar" x="97.5" y="243.8" width="17.2" height="76.2"/><rect class="ch-bar" x="117.9" y="188" width="17.2" height="132"/><rect class="ch-bar" x="138.4" y="142.7" width="17.2" height="177.3"/><rect class="ch-bar" x="158.9" y="85.9" width="17.2" height="234.1"/><rect class="ch-bar" x="179.3" y="70.6" width="17.2" height="249.4"/><rect class="ch-bar" x="199.8" y="48" width="17.2" height="272"/><rect class="ch-bar ch-bar--median" x="220.3" y="51.2" width="17.2" height="268.8"/><rect class="ch-bar" x="240.7" y="52.7" width="17.2" height="267.3"/><rect class="ch-bar" x="261.2" y="74.5" width="17.2" height="245.5"/><rect class="ch-bar" x="281.6" y="107.1" width="17.2" height="212.9"/><rect class="ch-bar" x="302.1" y="129.5" width="17.2" height="190.5"/><rect class="ch-bar" x="322.6" y="163.3" width="17.2" height="156.7"/><rect class="ch-bar" x="343" y="197.1" width="17.2" height="122.9"/><rect class="ch-bar" x="363.5" y="217.4" width="17.2" height="102.6"/><rect class="ch-bar" x="383.9" y="256.2" width="17.2" height="63.8"/><rect class="ch-bar" x="404.4" y="277.7" width="17.2" height="42.3"/><rect class="ch-bar" x="424.9" y="291.2" width="17.2" height="28.8"/><rect class="ch-bar" x="445.3" y="303.8" width="17.2" height="16.2"/><rect class="ch-bar" x="465.8" y="307.4" width="17.2" height="12.6"/><rect class="ch-bar" x="486.3" y="315.9" width="17.2" height="4.1"/><rect class="ch-bar" x="506.7" y="318.2" width="17.2" height="1.8"/><rect class="ch-bar" x="527.2" y="319" width="17.2" height="1"/><line class="ch-base" x1="14" y1="320" x2="546" y2="320"/><line class="ch-base" x1="43.4" y1="320" x2="43.4" y2="325"/><text class="ch-tick" x="43.4" y="340" text-anchor="middle">20</text><line class="ch-base" x1="158.5" y1="320" x2="158.5" y2="325"/><text class="ch-tick" x="158.5" y="340" text-anchor="middle">25</text><line class="ch-base" x1="273.5" y1="320" x2="273.5" y2="325"/><text class="ch-tick" x="273.5" y="340" text-anchor="middle">30</text><line class="ch-base" x1="388.6" y1="320" x2="388.6" y2="325"/><text class="ch-tick" x="388.6" y="340" text-anchor="middle">35</text><line class="ch-base" x1="503.6" y1="320" x2="503.6" y2="325"/><text class="ch-tick" x="503.6" y="340" text-anchor="middle">40</text><text class="ch-axis" x="280" y="362" text-anchor="middle">Days to finish</text><path class="ch-halo" d="M158.5 22V320"/><path class="ch-mark ch-mark--plan" d="M158.5 22V320"/><path class="ch-diamond" d="M158.5 314l6 6l-6 6l-6 -6z"/><path class="ch-diamond" d="M128.5 5.5l5 5l-5 5l-5 -5z"/><text class="ch-label" x="137.5" y="15">Plan 25</text><path class="ch-halo" d="M236.4 22V48.2"/><path class="ch-mark ch-mark--median" d="M236.4 22V48.2"/><text class="ch-label" x="236.4" y="15" text-anchor="middle">P50 28.5</text><path class="ch-halo" d="M335.6 22V320"/><path class="ch-mark ch-mark--pct" d="M335.6 22V320"/><text class="ch-label" x="335.6" y="15" text-anchor="middle">P85 33</text><path class="ch-halo" d="M388.9 22V320"/><path class="ch-mark ch-mark--pct" d="M388.9 22V320"/><text class="ch-label" x="393.8" y="15" text-anchor="middle">P95 36</text></svg>
+          <dl class="tiles">
+            <div class="tile"><dt>The plan</dt><dd><span class="tile__fig"><span data-out="naive">25</span><span class="tile__unit"> days</span></span><span class="tile__tag"><span data-out="chance">16%</span> of runs</span></dd></div>
+            <div class="tile"><dt>Safe to promise</dt><dd><span class="tile__fig"><span id="statP85" data-out="p85">33</span><span class="tile__unit"> days</span></span><span class="tile__tag">P85</span></dd></div>
+            <div class="tile"><dt>Near-certain</dt><dd><span class="tile__fig"><span id="statP95" data-out="p95">36</span><span class="tile__unit"> days</span></span><span class="tile__tag">P95</span></dd></div>
+          </dl>
+        </figure>
+      </div>
+      <p class="visually-hidden" id="liveStatus" role="status" aria-live="polite"></p>
+    </header>
 
-<!-- ===================== PROBLEM ===================== -->
-<section id="problem">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">The problem</div>
-      <h2>A single number hides the risk</h2>
-      <p>“This takes 5 days” throws away everything you know about uncertainty. A distribution keeps that knowledge and tells you how often you'll actually be late.</p>
+    <!-- below 60rem the chart scrolls away, so the numbers ride along; hidden from assistive tech, which hears #liveStatus -->
+    <div class="strip" aria-hidden="true">
+      <span class="strip__cell"><span class="strip__k">Plan odds</span><span class="strip__v" data-out="chance">16%</span></span>
+      <span class="strip__cell strip__cell--flip"><span class="strip__k" data-out="flip">Coin flip</span><span class="strip__v"><span data-out="p50">28.5</span><span class="strip__u"> days</span></span></span>
+      <span class="strip__cell"><span class="strip__k">Safe</span><span class="strip__v"><span data-out="p85">33</span><span class="strip__u"> days</span></span></span>
+      <span class="strip__cell"><span class="strip__k">Near-certain</span><span class="strip__v"><span data-out="p95">36</span><span class="strip__u"> days</span></span></span>
     </div>
-    <div class="compare">
-      <div class="card">
-        <div class="label">~ 21 days</div>
-        <svg id="ptEstimate" viewBox="0 0 380 180" aria-label="Single point estimate"></svg>
-        <div class="takeaway">One bar. No sense of best case, worst case, or how confident you should be.</div>
-      </div>
-      <div class="card">
-        <div class="label">21 days is a coin flip, 26 is near-certain</div>
-        <svg id="probHist" viewBox="0 0 380 180" aria-label="Distribution of outcomes"></svg>
-        <div class="takeaway">The full shape of outcomes, with percentile markers you can actually commit to.</div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ===================== DEMO ===================== -->
-<section id="demo" style="background: var(--surface);">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">Live demo</div>
-      <h2>Try it. No install needed.</h2>
-      <p>Four tasks, real dependencies. Every drag runs a fresh 10,000-trial Monte Carlo, exactly what planaco does.</p>
-    </div>
-    <div class="demo-grid">
-      <div class="card demo-controls" id="demoControls">
-        <!-- fieldsets generated by site.js from the TASKS config -->
-      </div>
-      <div class="demo-output">
-        <div class="chart-card">
-          <h3>How long until project completion?</h3>
-          <div class="desc">10,000 simulations · days to completion</div>
-          <svg id="demoHist" viewBox="0 0 520 300" aria-label="Live histogram of simulated completion times"></svg>
+    <section class="panel" id="demo" aria-labelledby="demo-title">
+      <h2 id="demo-title">Estimate each task.</h2>
+      <p class="lead">Set the minimum, most likely, and maximum duration. All values are days, and every change reruns 10,000 simulations.</p>
+      <div class="dag" id="demoControls">
+        <div class="task task--design" role="group" aria-labelledby="task-design" aria-describedby="task-design-meta">
+          <h3 id="task-design">Task 1: Design</h3>
+          <p class="task__meta" id="task-design-meta">Starts the plan</p>
+          <div class="row">
+            <label for="design-min">Min</label>
+            <input type="range" id="design-min" min="1" max="40" step="1" value="5" data-key="design" data-which="0" aria-label="Design minimum duration in days" aria-valuetext="5 days" disabled />
+            <span class="row__value" id="design-min-value">5</span>
+          </div>
+          <div class="row">
+            <label for="design-mode">Likely</label>
+            <input type="range" id="design-mode" min="1" max="40" step="1" value="7" data-key="design" data-which="1" aria-label="Design most likely duration in days" aria-valuetext="7 days" disabled />
+            <span class="row__value" id="design-mode-value">7</span>
+          </div>
+          <div class="row">
+            <label for="design-max">Max</label>
+            <input type="range" id="design-max" min="1" max="40" step="1" value="14" data-key="design" data-which="2" aria-label="Design maximum duration in days" aria-valuetext="14 days" disabled />
+            <span class="row__value" id="design-max-value">14</span>
+          </div>
         </div>
-        <div class="demo-stats" aria-live="polite">
-          <div class="stat p50"><span class="k">A coin flip</span><span class="v mono"><span id="statP50">—</span><span class="unit">days</span></span><span class="ptag">P50</span></div>
-          <div class="stat p85"><span class="k">Safe to promise</span><span class="v mono"><span id="statP85">—</span><span class="unit">days</span></span><span class="ptag">P85</span></div>
-          <div class="stat p95"><span class="k">Near-certain</span><span class="v mono"><span id="statP95">—</span><span class="unit">days</span></span><span class="ptag">P95</span></div>
+        <div class="dag__link dag__link--fork" aria-hidden="true"></div>
+        <div class="task task--frontend" role="group" aria-labelledby="task-frontend" aria-describedby="task-frontend-meta">
+          <h3 id="task-frontend">Task 2A: Frontend</h3>
+          <p class="task__meta" id="task-frontend-meta">After Design, alongside Backend</p>
+          <div class="row">
+            <label for="frontend-min">Min</label>
+            <input type="range" id="frontend-min" min="1" max="40" step="1" value="8" data-key="frontend" data-which="0" aria-label="Frontend minimum duration in days" aria-valuetext="8 days" disabled />
+            <span class="row__value" id="frontend-min-value">8</span>
+          </div>
+          <div class="row">
+            <label for="frontend-mode">Likely</label>
+            <input type="range" id="frontend-mode" min="1" max="40" step="1" value="12" data-key="frontend" data-which="1" aria-label="Frontend most likely duration in days" aria-valuetext="12 days" disabled />
+            <span class="row__value" id="frontend-mode-value">12</span>
+          </div>
+          <div class="row">
+            <label for="frontend-max">Max</label>
+            <input type="range" id="frontend-max" min="1" max="40" step="1" value="15" data-key="frontend" data-which="2" aria-label="Frontend maximum duration in days" aria-valuetext="15 days" disabled />
+            <span class="row__value" id="frontend-max-value">15</span>
+          </div>
+        </div>
+        <div class="task task--backend" role="group" aria-labelledby="task-backend" aria-describedby="task-backend-meta">
+          <h3 id="task-backend">Task 2B: Backend</h3>
+          <p class="task__meta" id="task-backend-meta">After Design, alongside Frontend</p>
+          <div class="row">
+            <label for="backend-min">Min</label>
+            <input type="range" id="backend-min" min="1" max="40" step="1" value="10" data-key="backend" data-which="0" aria-label="Backend minimum duration in days" aria-valuetext="10 days" disabled />
+            <span class="row__value" id="backend-min-value">10</span>
+          </div>
+          <div class="row">
+            <label for="backend-mode">Likely</label>
+            <input type="range" id="backend-mode" min="1" max="40" step="1" value="15" data-key="backend" data-which="1" aria-label="Backend most likely duration in days" aria-valuetext="15 days" disabled />
+            <span class="row__value" id="backend-mode-value">15</span>
+          </div>
+          <div class="row">
+            <label for="backend-max">Max</label>
+            <input type="range" id="backend-max" min="1" max="40" step="1" value="25" data-key="backend" data-which="2" aria-label="Backend maximum duration in days" aria-valuetext="25 days" disabled />
+            <span class="row__value" id="backend-max-value">25</span>
+          </div>
+        </div>
+        <div class="dag__link dag__link--join" aria-hidden="true"></div>
+        <div class="task task--testing" role="group" aria-labelledby="task-testing" aria-describedby="task-testing-meta">
+          <h3 id="task-testing">Task 3: Testing</h3>
+          <p class="task__meta" id="task-testing-meta">After Frontend and Backend</p>
+          <div class="row">
+            <label for="testing-min">Min</label>
+            <input type="range" id="testing-min" min="1" max="40" step="1" value="2" data-key="testing" data-which="0" aria-label="Testing minimum duration in days" aria-valuetext="2 days" disabled />
+            <span class="row__value" id="testing-min-value">2</span>
+          </div>
+          <div class="row">
+            <label for="testing-mode">Likely</label>
+            <input type="range" id="testing-mode" min="1" max="40" step="1" value="3" data-key="testing" data-which="1" aria-label="Testing most likely duration in days" aria-valuetext="3 days" disabled />
+            <span class="row__value" id="testing-mode-value">3</span>
+          </div>
+          <div class="row">
+            <label for="testing-max">Max</label>
+            <input type="range" id="testing-max" min="1" max="40" step="1" value="5" data-key="testing" data-which="2" aria-label="Testing maximum duration in days" aria-valuetext="5 days" disabled />
+            <span class="row__value" id="testing-max-value">5</span>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="code-block demo-code">
-      <div class="bar"><span class="dotr" style="background:var(--coral)"></span><span class="dotr" style="background:var(--amber)"></span><span class="dotr" style="background:var(--teal)"></span> &nbsp;the same model, in planaco</div>
-<pre><span class="tok-key">project</span> = Project(name=<span class="tok-str">"Web App"</span>, unit=<span class="tok-str">"days"</span>)
-project.add_task(design)                              <span class="tok-com"># 5 · 7 · 14</span>
-project.add_task(frontend, depends_on=[design])       <span class="tok-com"># 8 · 12 · 15</span>
-project.add_task(backend,  depends_on=[design])       <span class="tok-com"># 10 · 15 · 25</span>
-project.add_task(testing,  depends_on=[frontend, backend])
-project.statistics(n=<span class="tok-num">10_000</span>)   <span class="tok-com"># → P50, P85, P95</span></pre>
-    </div>
+      <noscript><p class="note">The sliders need JavaScript. Every number on this page is the default plan, simulated 10,000 times with seed 42.</p></noscript>
+    </section>
+
+    <section class="panel" id="naive" aria-labelledby="naive-title">
+      <h2 id="naive-title">The plan says <span id="naiveDays" data-out="naive">25</span> days.</h2>
+      <p class="lead">That is each most likely estimate added along the longest path: <span class="sum" id="naiveSum" data-out="sum">Design 7 + Backend 15 + Testing 3</span>.</p>
+      <p class="odds"><span class="odds__fig" id="naiveChance" data-out="chance">16%</span> <span class="odds__label">of the simulated runs finish by then.</span></p>
+    </section>
+
+    <section class="panel" id="critical" aria-labelledby="critical-title">
+      <h2 id="critical-title">Which task is making you late?</h2>
+      <p class="lead">The share of runs in which each task sat on the critical path. Design and Testing sit on every path, so the race is Frontend against Backend.</p>
+      <ul class="crit">
+        <li><span class="crit__name">Design</span><span class="crit__track" aria-hidden="true"><span class="crit__bar" id="crit-design-bar" style="--share:1"></span></span><span class="crit__val" id="crit-design">100%</span></li>
+        <li><span class="crit__name">Frontend</span><span class="crit__track" aria-hidden="true"><span class="crit__bar" id="crit-frontend-bar" style="--share:0.0592"></span></span><span class="crit__val" id="crit-frontend">6%</span></li>
+        <li><span class="crit__name">Backend</span><span class="crit__track" aria-hidden="true"><span class="crit__bar" id="crit-backend-bar" style="--share:0.9408"></span></span><span class="crit__val" id="crit-backend">94%</span></li>
+        <li><span class="crit__name">Testing</span><span class="crit__track" aria-hidden="true"><span class="crit__bar" id="crit-testing-bar" style="--share:1"></span></span><span class="crit__val" id="crit-testing">100%</span></li>
+      </ul>
+      <p class="note">The library reports this measure with <code>project.get_critical_path_analysis()</code>.</p>
+    </section>
+
   </div>
-</section>
+</div>
 
-<!-- ===================== HOW ===================== -->
-<section id="how">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">How it works</div>
-      <h2>Three steps from tasks to confidence</h2>
+<section class="code" id="code" aria-labelledby="code-title">
+  <div class="container">
+    <div class="head head--split">
+      <h2 id="code-title">The same plan, in code.</h2>
+      <p class="lead">The plan above as a Python script, a YAML file for the command line, or a prompt for a coding agent.</p>
     </div>
-    <div class="steps">
-      <div class="step">
-        <div class="num">1</div>
-        <h3>Model each task</h3>
-        <p>Give a min / most-likely / max, or pick one of six distributions. Planaco captures the uncertainty you already feel.</p>
-      </div>
-      <div class="step">
-        <div class="num">2</div>
-        <h3>Link dependencies</h3>
-        <p>Declare what blocks what. Planaco builds a DAG and computes the critical path on every simulated run.</p>
-      </div>
-      <div class="step">
-        <div class="num">3</div>
-        <h3>Simulate &amp; decide</h3>
-        <p>Run 10,000 Monte Carlo trials in milliseconds. Read off percentiles, confidence intervals, and the riskiest tasks.</p>
-      </div>
+    <div class="tabs" role="tablist" aria-label="Code examples">
+      <button type="button" class="tab" role="tab" id="tab-python" aria-controls="panel-python" aria-selected="true">Python</button>
+      <button type="button" class="tab" role="tab" id="tab-yaml" aria-controls="panel-yaml" aria-selected="false" tabindex="-1">YAML<span class="tab__more"> + CLI</span></button>
+      <button type="button" class="tab" role="tab" id="tab-output" aria-controls="panel-output" aria-selected="false" tabindex="-1">Output</button>
+      <button type="button" class="tab" role="tab" id="tab-agent" aria-controls="panel-agent" aria-selected="false" tabindex="-1"><span class="tab__more">With an </span><span class="tab__last">agent</span></button>
     </div>
-  </div>
-</section>
 
-<!-- ===================== CODE ===================== -->
-<section id="code" style="background: var(--surface);">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">From YAML to forecast</div>
-      <h2>Define it once, simulate forever</h2>
-    </div>
-    <div class="tabs-card">
-      <div class="tabs" role="tablist" aria-label="Code examples">
-        <button class="tab" role="tab" id="tab-python" aria-controls="panel-python" aria-selected="true">Python</button>
-        <button class="tab" role="tab" id="tab-yaml" aria-controls="panel-yaml" aria-selected="false" tabindex="-1">YAML + CLI</button>
-        <button class="tab" role="tab" id="tab-output" aria-controls="panel-output" aria-selected="false" tabindex="-1">Output</button>
-      </div>
+    <div class="tab-panel" role="tabpanel" id="panel-python" aria-labelledby="tab-python">
+      <h3 class="tab-panel__label">Python</h3>
+      <pre tabindex="0"><code>from planaco import Task, Project
 
-      <div class="tab-panel" role="tabpanel" id="panel-python" aria-labelledby="tab-python">
-<pre><span class="tok-key">from</span> planaco <span class="tok-key">import</span> Task, Project
+project = Project(name=&quot;Web App&quot;, unit=&quot;days&quot;)
 
-project = Project(name=<span class="tok-str">"Web App"</span>, unit=<span class="tok-str">"days"</span>)
-
-design   = Task(name=<span class="tok-str">"Design"</span>,   min_duration=<span class="tok-num">5</span>,  mode_duration=<span class="tok-num">7</span>,  max_duration=<span class="tok-num">14</span>)
-frontend = Task(name=<span class="tok-str">"Frontend"</span>, min_duration=<span class="tok-num">8</span>,  mode_duration=<span class="tok-num">12</span>, max_duration=<span class="tok-num">15</span>)
-backend  = Task(name=<span class="tok-str">"Backend"</span>,  min_duration=<span class="tok-num">10</span>, mode_duration=<span class="tok-num">15</span>, max_duration=<span class="tok-num">25</span>)
-testing  = Task(name=<span class="tok-str">"Testing"</span>,  min_duration=<span class="tok-num">2</span>,  mode_duration=<span class="tok-num">3</span>,  max_duration=<span class="tok-num">5</span>)
+design   = Task(name=&quot;Design&quot;,   min_duration=5,  mode_duration=7,  max_duration=14)
+frontend = Task(name=&quot;Frontend&quot;, min_duration=8,  mode_duration=12, max_duration=15)
+backend  = Task(name=&quot;Backend&quot;,  min_duration=10, mode_duration=15, max_duration=25)
+testing  = Task(name=&quot;Testing&quot;,  min_duration=2,  mode_duration=3,  max_duration=5)
 
 project.add_task(design)
 project.add_task(frontend, depends_on=[design])
 project.add_task(backend,  depends_on=[design])
 project.add_task(testing,  depends_on=[frontend, backend])
 
-stats = project.statistics(n=<span class="tok-num">10_000</span>)
-<span class="tok-key">print</span>(stats[<span class="tok-str">"percentiles"</span>][<span class="tok-str">"p85"</span>])</pre>
+stats = project.statistics(n=10_000)
+print(stats[&quot;percentiles&quot;][&quot;p85&quot;])</code></pre>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-yaml" aria-labelledby="tab-yaml">
+      <h3 class="tab-panel__label">YAML + CLI</h3>
+      <div class="tab-panel__pair">
+        <figure class="listing"><figcaption>project.yaml</figcaption><pre tabindex="0"><code>project:
+  name: &quot;Web App&quot;
+  unit: &quot;days&quot;
+  seed: 42
+
+tasks:
+  design:
+    name: &quot;Design&quot;
+    min_duration: 5
+    mode_duration: 7
+    max_duration: 14
+
+  frontend:
+    name: &quot;Frontend&quot;
+    min_duration: 8
+    mode_duration: 12
+    max_duration: 15
+    depends_on:
+      - design
+
+  backend:
+    name: &quot;Backend&quot;
+    min_duration: 10
+    mode_duration: 15
+    max_duration: 25
+    depends_on:
+      - design
+
+  testing:
+    name: &quot;Testing&quot;
+    min_duration: 2
+    mode_duration: 3
+    max_duration: 5
+    depends_on:
+      - frontend
+      - backend</code></pre></figure>
+        <figure class="listing"><figcaption>Then, on the command line</figcaption><pre tabindex="0"><code># Print formatted statistics
+planaco stats project.yaml -n 10000
+
+# Export results (json or csv)
+planaco run project.yaml -o results.json
+
+# Histogram or cumulative plot
+planaco plot project.yaml -o chart.svg
+
+# Draw the task dependency graph
+planaco graph project.yaml -o graph.svg
+
+# Write a starter project file to edit
+planaco init starter.yaml</code></pre></figure>
       </div>
+    </div>
 
-      <div class="tab-panel" role="tabpanel" id="panel-yaml" aria-labelledby="tab-yaml" hidden>
-<pre><span class="tok-com"># project.yaml, then run: planaco stats project.yaml</span>
-<span class="tok-key">project:</span>
-  <span class="tok-key">name:</span> <span class="tok-str">"Web App"</span>
-  <span class="tok-key">unit:</span> <span class="tok-str">days</span>
-  <span class="tok-key">seed:</span> <span class="tok-num">42</span>
+    <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output">
+      <h3 class="tab-panel__label">Output</h3>
+      <div class="tab-panel__pair">
+        <figure class="listing"><figcaption>planaco stats project.yaml</figcaption><pre tabindex="0"><code>Project: Web App
+==================================================
 
-<span class="tok-key">tasks:</span>
-  <span class="tok-key">design:</span>
-    <span class="tok-key">estimator:</span> <span class="tok-str">pert</span>
-    <span class="tok-key">min_duration:</span> <span class="tok-num">5</span>
-    <span class="tok-key">mode_duration:</span> <span class="tok-num">7</span>
-    <span class="tok-key">max_duration:</span> <span class="tok-num">14</span>
-  <span class="tok-key">build:</span>
-    <span class="tok-key">estimator:</span> <span class="tok-str">triangular</span>
-    <span class="tok-key">min_duration:</span> <span class="tok-num">10</span>
-    <span class="tok-key">mode_duration:</span> <span class="tok-num">15</span>
-    <span class="tok-key">max_duration:</span> <span class="tok-num">25</span>
-    <span class="tok-key">depends_on:</span> [<span class="tok-str">design</span>]</pre>
+Simulations: 10,000
+Time Unit: days
+
+Duration Estimates:
+  Mean:              28.7 days
+  Median (P50):      28.5 days
+  Std Deviation:     3.6 days
+  Min:               19.1 days
+  Max:               41.4 days
+
+Percentiles:
+  P10:              24.1 days
+  P50:              28.5 days
+  P85:              32.7 days
+  P90:              33.6 days
+  P95:              35.1 days
+
+Confidence Interval:
+  95% CI:            [21.6, 35.9] days</code></pre></figure>
+        <figure class="listing"><figcaption>random.seed(42), then project.get_critical_path_analysis(n=10000)</figcaption><pre tabindex="0"><code>{
+  &quot;Design&quot;: {
+    &quot;task_id&quot;: &quot;52d66973-922f-4e00-8b84-73f13c6afd10&quot;,
+    &quot;count&quot;: 10000,
+    &quot;frequency&quot;: 1.0
+  },
+  &quot;Frontend&quot;: {
+    &quot;task_id&quot;: &quot;8c77454a-9e68-4080-b906-8e2698391d7d&quot;,
+    &quot;count&quot;: 614,
+    &quot;frequency&quot;: 0.0614
+  },
+  &quot;Backend&quot;: {
+    &quot;task_id&quot;: &quot;d1cc77a0-1f63-417b-96c7-b3200a850d52&quot;,
+    &quot;count&quot;: 9386,
+    &quot;frequency&quot;: 0.9386
+  },
+  &quot;Testing&quot;: {
+    &quot;task_id&quot;: &quot;4f1e4b88-a6a2-4c4d-ba55-31c41894fb07&quot;,
+    &quot;count&quot;: 10000,
+    &quot;frequency&quot;: 1.0
+  }
+}</code></pre></figure>
       </div>
+      <p class="note">Real output from version 0.3.1. Both runs are seeded with 42, so they reproduce; each <code>task_id</code> is new on every run. The chart on this page runs a JavaScript port of the same model with its own random numbers, so its figures differ slightly: Frontend is on the critical path in 5.9% of its runs against 6.1% here, and its longest run is 41.8 days against 41.4.</p>
+    </div>
 
-      <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output" hidden>
-        <pre><span class="tok-com"># Web App · 10,000 sims</span>
+    <div class="tab-panel" role="tabpanel" id="panel-agent" aria-labelledby="tab-agent">
+      <h3 class="tab-panel__label">With an agent</h3>
+      <figure class="listing"><figcaption>A prompt to paste into a coding agent</figcaption><pre class="prose" id="agentPrompt" tabindex="0">Install planaco with &quot;pip install planaco&quot;. Then write project.yaml for this plan, in days, giving every task a min_duration, mode_duration and max_duration:
 
-<div class="stat-line"><span>Mean</span><span class="v">24.3 days</span></div><div class="stat-line"><span>Median (P50)</span><span class="v">24.0 days</span></div><div class="stat-line"><span>Std dev</span><span class="v">3.1 days</span></div><div class="stat-line"><span>P85</span><span class="v">27.4 days</span></div><div class="stat-line"><span>P95</span><span class="v">29.8 days</span></div><div class="stat-line" style="border:none"><span>95% CI</span><span class="v">[18.2, 30.4]</span></div></pre>
-      </div>
+- design: 5, 7, 14
+- frontend: 8, 12, 15, depends_on design
+- backend: 10, 15, 25, depends_on design
+- testing: 2, 3, 5, depends_on frontend and backend
+
+Put seed: 42 under project so the run reproduces. Run &quot;planaco stats project.yaml&quot; and report the P50, P85 and P95 in days.</pre></figure>
+      <p class="tab-panel__actions"><button type="button" class="copy copy--quiet" data-copy-from="agentPrompt"><span class="copy__label" aria-live="polite">Copy the prompt</span></button></p>
+      <p class="note">planaco has no agent integration of its own. The agent writes the YAML and runs the command line.</p>
     </div>
   </div>
 </section>
 
-<!-- ===================== DISTRIBUTIONS ===================== -->
-<section id="distributions">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="section-tag">Six distributions</div>
-      <h2>Pick the shape that fits the uncertainty</h2>
+<section class="ref" id="distributions" aria-labelledby="dist-title">
+  <div class="container ref__grid">
+    <div class="head">
+      <h2 id="dist-title">Pick the shape that fits the uncertainty</h2>
+      <p class="lead">Six distributions, set per task.</p>
     </div>
-    <div class="dists" id="dists"></div>
+    <table class="dists" id="dists">
+      <thead>
+        <tr><th scope="col">Distribution</th><th scope="col"><span class="visually-hidden">Shape</span></th><th scope="col">Use it for</th><th scope="col">YAML fields</th></tr>
+      </thead>
+      <tbody>
+          <tr>
+            <th scope="row">Triangular</th>
+            <td class="dists__shape"><svg class="spark" data-kind="triangular" viewBox="0 0 120 40" aria-hidden="true"><path class="spark__area" d="M3.0 37.0L4.9 37.0L6.9 37.0L8.8 37.0L10.7 37.0L12.7 37.0L14.6 36.8L16.5 35.2L18.5 33.5L20.4 31.8L22.3 30.1L24.3 28.5L26.2 26.8L28.1 25.1L30.1 23.5L32.0 21.8L33.9 20.1L35.8 18.4L37.8 16.8L39.7 15.1L41.6 13.4L43.6 11.8L45.5 10.1L47.4 8.4L49.4 6.7L51.3 5.1L53.2 3.4L55.2 3.0L57.1 4.2L59.0 5.3L61.0 6.5L62.9 7.7L64.8 8.9L66.8 10.0L68.7 11.2L70.6 12.4L72.6 13.5L74.5 14.7L76.4 15.9L78.4 17.0L80.3 18.2L82.2 19.4L84.2 20.6L86.1 21.7L88.0 22.9L89.9 24.1L91.9 25.2L93.8 26.4L95.7 27.6L97.7 28.7L99.6 29.9L101.5 31.1L103.5 32.3L105.4 33.4L107.3 34.6L109.3 35.8L111.2 36.9L113.1 37.0L115.1 37.0L117.0 37.0L117 37L3 37Z"/><path class="spark__line" d="M3.0 37.0L4.9 37.0L6.9 37.0L8.8 37.0L10.7 37.0L12.7 37.0L14.6 36.8L16.5 35.2L18.5 33.5L20.4 31.8L22.3 30.1L24.3 28.5L26.2 26.8L28.1 25.1L30.1 23.5L32.0 21.8L33.9 20.1L35.8 18.4L37.8 16.8L39.7 15.1L41.6 13.4L43.6 11.8L45.5 10.1L47.4 8.4L49.4 6.7L51.3 5.1L53.2 3.4L55.2 3.0L57.1 4.2L59.0 5.3L61.0 6.5L62.9 7.7L64.8 8.9L66.8 10.0L68.7 11.2L70.6 12.4L72.6 13.5L74.5 14.7L76.4 15.9L78.4 17.0L80.3 18.2L82.2 19.4L84.2 20.6L86.1 21.7L88.0 22.9L89.9 24.1L91.9 25.2L93.8 26.4L95.7 27.6L97.7 28.7L99.6 29.9L101.5 31.1L103.5 32.3L105.4 33.4L107.3 34.6L109.3 35.8L111.2 36.9L113.1 37.0L115.1 37.0L117.0 37.0"/></svg></td>
+            <td>A three-point estimate. The default.</td>
+            <td class="dists__fields"><code>estimator: triangular</code><br /><code>min_duration, mode_duration, max_duration</code></td>
+          </tr>
+          <tr>
+            <th scope="row">PERT</th>
+            <td class="dists__shape"><svg class="spark" data-kind="pert" viewBox="0 0 120 40" aria-hidden="true"><path class="spark__area" d="M3.0 37.0L4.9 36.9L6.9 36.8L8.8 36.4L10.7 35.9L12.7 35.3L14.6 34.5L16.5 33.6L18.5 32.6L20.4 31.5L22.3 30.2L24.3 28.9L26.2 27.6L28.1 26.1L30.1 24.6L32.0 23.1L33.9 21.6L35.8 20.0L37.8 18.5L39.7 17.0L41.6 15.4L43.6 14.0L45.5 12.6L47.4 11.2L49.4 9.9L51.3 8.7L53.2 7.6L55.2 6.6L57.1 5.7L59.0 4.9L61.0 4.3L62.9 3.7L64.8 3.3L66.8 3.1L68.7 3.0L70.6 3.1L72.6 3.3L74.5 3.6L76.4 4.1L78.4 4.8L80.3 5.7L82.2 6.7L84.2 7.8L86.1 9.1L88.0 10.5L89.9 12.1L91.9 13.8L93.8 15.6L95.7 17.5L97.7 19.5L99.6 21.5L101.5 23.6L103.5 25.7L105.4 27.8L107.3 29.8L109.3 31.8L111.2 33.6L113.1 35.1L115.1 36.4L117.0 37.0L117 37L3 37Z"/><path class="spark__line" d="M3.0 37.0L4.9 36.9L6.9 36.8L8.8 36.4L10.7 35.9L12.7 35.3L14.6 34.5L16.5 33.6L18.5 32.6L20.4 31.5L22.3 30.2L24.3 28.9L26.2 27.6L28.1 26.1L30.1 24.6L32.0 23.1L33.9 21.6L35.8 20.0L37.8 18.5L39.7 17.0L41.6 15.4L43.6 14.0L45.5 12.6L47.4 11.2L49.4 9.9L51.3 8.7L53.2 7.6L55.2 6.6L57.1 5.7L59.0 4.9L61.0 4.3L62.9 3.7L64.8 3.3L66.8 3.1L68.7 3.0L70.6 3.1L72.6 3.3L74.5 3.6L76.4 4.1L78.4 4.8L80.3 5.7L82.2 6.7L84.2 7.8L86.1 9.1L88.0 10.5L89.9 12.1L91.9 13.8L93.8 15.6L95.7 17.5L97.7 19.5L99.6 21.5L101.5 23.6L103.5 25.7L105.4 27.8L107.3 29.8L109.3 31.8L111.2 33.6L113.1 35.1L115.1 36.4L117.0 37.0"/></svg></td>
+            <td>Smoother than triangular, with more weight on the most likely value.</td>
+            <td class="dists__fields"><code>estimator: pert</code><br /><code>min_duration, mode_duration, max_duration, optional lamb</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Uniform</th>
+            <td class="dists__shape"><svg class="spark" data-kind="uniform" viewBox="0 0 120 40" aria-hidden="true"><path class="spark__area" d="M3.0 37.0L4.9 37.0L6.9 37.0L8.8 37.0L10.7 37.0L12.7 37.0L14.6 3.0L16.5 3.0L18.5 3.0L20.4 3.0L22.3 3.0L24.3 3.0L26.2 3.0L28.1 3.0L30.1 3.0L32.0 3.0L33.9 3.0L35.8 3.0L37.8 3.0L39.7 3.0L41.6 3.0L43.6 3.0L45.5 3.0L47.4 3.0L49.4 3.0L51.3 3.0L53.2 3.0L55.2 3.0L57.1 3.0L59.0 3.0L61.0 3.0L62.9 3.0L64.8 3.0L66.8 3.0L68.7 3.0L70.6 3.0L72.6 3.0L74.5 3.0L76.4 3.0L78.4 3.0L80.3 3.0L82.2 3.0L84.2 3.0L86.1 3.0L88.0 3.0L89.9 3.0L91.9 3.0L93.8 3.0L95.7 3.0L97.7 3.0L99.6 3.0L101.5 3.0L103.5 3.0L105.4 3.0L107.3 37.0L109.3 37.0L111.2 37.0L113.1 37.0L115.1 37.0L117.0 37.0L117 37L3 37Z"/><path class="spark__line" d="M3.0 37.0L4.9 37.0L6.9 37.0L8.8 37.0L10.7 37.0L12.7 37.0L14.6 3.0L16.5 3.0L18.5 3.0L20.4 3.0L22.3 3.0L24.3 3.0L26.2 3.0L28.1 3.0L30.1 3.0L32.0 3.0L33.9 3.0L35.8 3.0L37.8 3.0L39.7 3.0L41.6 3.0L43.6 3.0L45.5 3.0L47.4 3.0L49.4 3.0L51.3 3.0L53.2 3.0L55.2 3.0L57.1 3.0L59.0 3.0L61.0 3.0L62.9 3.0L64.8 3.0L66.8 3.0L68.7 3.0L70.6 3.0L72.6 3.0L74.5 3.0L76.4 3.0L78.4 3.0L80.3 3.0L82.2 3.0L84.2 3.0L86.1 3.0L88.0 3.0L89.9 3.0L91.9 3.0L93.8 3.0L95.7 3.0L97.7 3.0L99.6 3.0L101.5 3.0L103.5 3.0L105.4 3.0L107.3 37.0L109.3 37.0L111.2 37.0L113.1 37.0L115.1 37.0L117.0 37.0"/></svg></td>
+            <td>Every duration in the range is equally likely.</td>
+            <td class="dists__fields"><code>estimator: uniform</code><br /><code>min_duration, max_duration</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Normal</th>
+            <td class="dists__shape"><svg class="spark" data-kind="normal" viewBox="0 0 120 40" aria-hidden="true"><path class="spark__area" d="M3.0 36.7L4.9 36.6L6.9 36.5L8.8 36.3L10.7 36.1L12.7 35.8L14.6 35.5L16.5 35.0L18.5 34.5L20.4 33.8L22.3 33.0L24.3 32.0L26.2 30.9L28.1 29.6L30.1 28.2L32.0 26.5L33.9 24.8L35.8 22.8L37.8 20.8L39.7 18.7L41.6 16.5L43.6 14.3L45.5 12.2L47.4 10.1L49.4 8.3L51.3 6.6L53.2 5.2L55.2 4.1L57.1 3.4L59.0 3.0L61.0 3.0L62.9 3.4L64.8 4.1L66.8 5.2L68.7 6.6L70.6 8.3L72.6 10.1L74.5 12.2L76.4 14.3L78.4 16.5L80.3 18.7L82.2 20.8L84.2 22.8L86.1 24.8L88.0 26.5L89.9 28.2L91.9 29.6L93.8 30.9L95.7 32.0L97.7 33.0L99.6 33.8L101.5 34.5L103.5 35.0L105.4 35.5L107.3 35.8L109.3 36.1L111.2 36.3L113.1 36.5L115.1 36.6L117.0 36.7L117 37L3 37Z"/><path class="spark__line" d="M3.0 36.7L4.9 36.6L6.9 36.5L8.8 36.3L10.7 36.1L12.7 35.8L14.6 35.5L16.5 35.0L18.5 34.5L20.4 33.8L22.3 33.0L24.3 32.0L26.2 30.9L28.1 29.6L30.1 28.2L32.0 26.5L33.9 24.8L35.8 22.8L37.8 20.8L39.7 18.7L41.6 16.5L43.6 14.3L45.5 12.2L47.4 10.1L49.4 8.3L51.3 6.6L53.2 5.2L55.2 4.1L57.1 3.4L59.0 3.0L61.0 3.0L62.9 3.4L64.8 4.1L66.8 5.2L68.7 6.6L70.6 8.3L72.6 10.1L74.5 12.2L76.4 14.3L78.4 16.5L80.3 18.7L82.2 20.8L84.2 22.8L86.1 24.8L88.0 26.5L89.9 28.2L91.9 29.6L93.8 30.9L95.7 32.0L97.7 33.0L99.6 33.8L101.5 34.5L103.5 35.0L105.4 35.5L107.3 35.8L109.3 36.1L111.2 36.3L113.1 36.5L115.1 36.6L117.0 36.7"/></svg></td>
+            <td>A symmetric bell, cut off below at <code>min_value</code> (0 by default) and optionally above.</td>
+            <td class="dists__fields"><code>estimator: normal</code><br /><code>mean, std_dev, optional min_value, max_value</code></td>
+          </tr>
+          <tr>
+            <th scope="row">LogNormal</th>
+            <td class="dists__shape"><svg class="spark" data-kind="lognormal" viewBox="0 0 120 40" aria-hidden="true"><path class="spark__area" d="M3.0 37.0L4.9 37.0L6.9 37.0L8.8 36.8L10.7 36.0L12.7 33.6L14.6 29.6L16.5 24.3L18.5 18.5L20.4 13.2L22.3 8.7L24.3 5.6L26.2 3.7L28.1 3.0L30.1 3.3L32.0 4.4L33.9 6.1L35.8 8.1L37.8 10.3L39.7 12.7L41.6 15.0L43.6 17.2L45.5 19.3L47.4 21.3L49.4 23.1L51.3 24.7L53.2 26.2L55.2 27.5L57.1 28.7L59.0 29.7L61.0 30.7L62.9 31.5L64.8 32.2L66.8 32.8L68.7 33.3L70.6 33.8L72.6 34.2L74.5 34.6L76.4 34.9L78.4 35.2L80.3 35.4L82.2 35.6L84.2 35.8L86.1 35.9L88.0 36.1L89.9 36.2L91.9 36.3L93.8 36.4L95.7 36.5L97.7 36.5L99.6 36.6L101.5 36.6L103.5 36.7L105.4 36.7L107.3 36.8L109.3 36.8L111.2 36.8L113.1 36.8L115.1 36.9L117.0 36.9L117 37L3 37Z"/><path class="spark__line" d="M3.0 37.0L4.9 37.0L6.9 37.0L8.8 36.8L10.7 36.0L12.7 33.6L14.6 29.6L16.5 24.3L18.5 18.5L20.4 13.2L22.3 8.7L24.3 5.6L26.2 3.7L28.1 3.0L30.1 3.3L32.0 4.4L33.9 6.1L35.8 8.1L37.8 10.3L39.7 12.7L41.6 15.0L43.6 17.2L45.5 19.3L47.4 21.3L49.4 23.1L51.3 24.7L53.2 26.2L55.2 27.5L57.1 28.7L59.0 29.7L61.0 30.7L62.9 31.5L64.8 32.2L66.8 32.8L68.7 33.3L70.6 33.8L72.6 34.2L74.5 34.6L76.4 34.9L78.4 35.2L80.3 35.4L82.2 35.6L84.2 35.8L86.1 35.9L88.0 36.1L89.9 36.2L91.9 36.3L93.8 36.4L95.7 36.5L97.7 36.5L99.6 36.6L101.5 36.6L103.5 36.7L105.4 36.7L107.3 36.8L109.3 36.8L111.2 36.8L113.1 36.8L115.1 36.9L117.0 36.9"/></svg></td>
+            <td>Right-skewed: most runs land near the estimate and a few overrun badly.</td>
+            <td class="dists__fields"><code>estimator: lognormal</code><br /><code>mean, std_dev, optional min_value, max_value</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Beta</th>
+            <td class="dists__shape"><svg class="spark" data-kind="beta" viewBox="0 0 120 40" aria-hidden="true"><path class="spark__area" d="M3.0 37.0L4.9 36.0L6.9 34.1L8.8 31.8L10.7 29.2L12.7 26.5L14.6 23.8L16.5 21.1L18.5 18.5L20.4 16.0L22.3 13.7L24.3 11.6L26.2 9.7L28.1 8.1L30.1 6.6L32.0 5.4L33.9 4.5L35.8 3.8L37.8 3.3L39.7 3.0L41.6 3.0L43.6 3.2L45.5 3.5L47.4 4.1L49.4 4.8L51.3 5.7L53.2 6.7L55.2 7.8L57.1 9.1L59.0 10.4L61.0 11.8L62.9 13.3L64.8 14.8L66.8 16.3L68.7 17.8L70.6 19.4L72.6 20.9L74.5 22.4L76.4 23.9L78.4 25.3L80.3 26.7L82.2 28.0L84.2 29.2L86.1 30.3L88.0 31.4L89.9 32.3L91.9 33.2L93.8 33.9L95.7 34.6L97.7 35.2L99.6 35.6L101.5 36.0L103.5 36.4L105.4 36.6L107.3 36.8L109.3 36.9L111.2 37.0L113.1 37.0L115.1 37.0L117.0 37.0L117 37L3 37Z"/><path class="spark__line" d="M3.0 37.0L4.9 36.0L6.9 34.1L8.8 31.8L10.7 29.2L12.7 26.5L14.6 23.8L16.5 21.1L18.5 18.5L20.4 16.0L22.3 13.7L24.3 11.6L26.2 9.7L28.1 8.1L30.1 6.6L32.0 5.4L33.9 4.5L35.8 3.8L37.8 3.3L39.7 3.0L41.6 3.0L43.6 3.2L45.5 3.5L47.4 4.1L49.4 4.8L51.3 5.7L53.2 6.7L55.2 7.8L57.1 9.1L59.0 10.4L61.0 11.8L62.9 13.3L64.8 14.8L66.8 16.3L68.7 17.8L70.6 19.4L72.6 20.9L74.5 22.4L76.4 23.9L78.4 25.3L80.3 26.7L82.2 28.0L84.2 29.2L86.1 30.3L88.0 31.4L89.9 32.3L91.9 33.2L93.8 33.9L95.7 34.6L97.7 35.2L99.6 35.6L101.5 36.0L103.5 36.4L105.4 36.6L107.3 36.8L109.3 36.9L111.2 37.0L113.1 37.0L115.1 37.0L117.0 37.0"/></svg></td>
+            <td>A flexible shape set by alpha and beta.</td>
+            <td class="dists__fields"><code>estimator: beta</code><br /><code>alpha, beta, max_value, optional min_value</code></td>
+          </tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
-<!-- ===================== GET STARTED ===================== -->
-<section id="get-started" style="background: var(--surface);">
-  <div class="wrap cta-inner">
-    <h2>Ship a range you can stand behind.</h2>
-    <div class="install big">
-      <span class="prompt">$</span>
-      <span>pip install planaco</span>
-      <button type="button" class="copy" data-copy="pip install planaco">copy</button>
-    </div>
-    <div class="cta-links">
-      <a class="btn-primary" href="https://github.com/sepam/planaco">GitHub</a>
-      <a class="btn-ghost" href="https://pypi.org/project/planaco/">PyPI</a>
+<section class="faq" id="questions" aria-labelledby="faq-title">
+  <div class="container">
+    <h2 id="faq-title">Before you install</h2>
+    <dl class="rows">
+        <div class="rows__row"><dt>Can I use it without writing Python?</dt><dd>Yes. Describe the project in a YAML file and run <code>planaco stats project.yaml</code>.</dd></div>
+        <div class="rows__row"><dt>Does it handle dependencies?</dt><dd>Yes. Each task lists what it depends on and waits for all of it. The critical path is found in every run.</dd></div>
+        <div class="rows__row"><dt>Is it stable?</dt><dd>Not yet. Version 0.3.1 is alpha, and the public API may still change between releases.</dd></div>
+        <div class="rows__row"><dt>What does it need?</dt><dd>Python 3.8 or newer, with click, numpy, PyYAML and cairosvg. PNG export also needs the Cairo system library; SVG works without it.</dd></div>
+        <div class="rows__row"><dt>How well is it tested?</dt><dd>100% line coverage today, and CI fails the build below 99%.</dd></div>
+        <div class="rows__row"><dt>What is the licence?</dt><dd>MIT.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="close" id="get-started" aria-labelledby="close-title">
+  <div class="container close__inner">
+    <h2 id="close-title">Ship a range you can stand behind.</h2>
+    <div class="hero__actions">
+          <div class="install">
+            <code class="install__cmd"><span class="install__prompt" aria-hidden="true">$ </span>pip install planaco</code>
+            <button type="button" class="copy" data-copy="pip install planaco"><span class="copy__label" aria-live="polite">Copy</span></button>
+          </div>
+          <a class="textlink" href="https://github.com/sepam/planaco#readme">Read the docs</a>
+          <a class="textlink" href="https://pypi.org/project/planaco/">PyPI</a>
     </div>
   </div>
 </section>
 
 </main>
 
-<!-- ===================== FOOTER ===================== -->
-<footer>
-  <div class="wrap foot-inner">
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 64 64" width="26" height="26">
-        <rect x="4"  y="44" width="6" height="14" rx="1" fill="var(--text)"/>
-        <rect x="12" y="38" width="6" height="20" rx="1" fill="var(--text)"/>
-        <rect x="20" y="28" width="6" height="30" rx="1" fill="var(--text)"/>
-        <rect x="28" y="18" width="6" height="40" rx="1" fill="var(--gold)"/>
-        <rect x="36" y="28" width="6" height="30" rx="1" fill="var(--text)"/>
-        <rect x="44" y="38" width="6" height="20" rx="1" fill="var(--text)"/>
-        <rect x="52" y="44" width="6" height="14" rx="1" fill="var(--text)"/>
-      </svg>
-      <span class="muted" style="font-size:14px;">© 2026 planaco · MIT licensed</span>
-    </div>
-    <div class="foot-links">
-      <a href="https://github.com/sepam/planaco">GitHub</a>
-      <a href="https://pypi.org/project/planaco/">PyPI</a>
-      <a href="https://github.com/sepam/planaco/blob/master/CHANGELOG.md">Changelog</a>
-      <a href="https://github.com/sepam/planaco/blob/master/LICENSE.md">License</a>
-    </div>
+<footer class="foot">
+  <div class="container foot__inner">
+    <p class="foot__sign"><span class="brand"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="4" y="44" width="6" height="14" rx="1"/><rect x="12" y="38" width="6" height="20" rx="1"/><rect x="20" y="28" width="6" height="30" rx="1"/><rect class="mark__mode" x="28" y="18" width="6" height="40" rx="1"/><rect x="36" y="28" width="6" height="30" rx="1"/><rect x="44" y="38" width="6" height="20" rx="1"/><rect x="52" y="44" width="6" height="14" rx="1"/>
+      </svg><span class="brand__word">planaco</span></span></p>
+    <ul class="foot__links">
+      <li><a href="https://github.com/sepam/planaco">GitHub</a></li>
+      <li><a href="https://pypi.org/project/planaco/">PyPI</a></li>
+      <li><a href="https://github.com/sepam/planaco/blob/master/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/sepam/planaco/blob/master/LICENSE.md">License</a></li>
+    </ul>
+    <p class="foot__legal">© 2026 planaco, MIT licensed</p>
   </div>
 </footer>
 
