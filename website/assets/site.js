@@ -107,22 +107,22 @@
      Marks nearer than 16px share one label and one line. One lane when it fits;
      otherwise the outer labels take the lane by the plot and the inner ones the lane above,
      so a line never has to bend and never runs through another label. */
-  function placeLabels(marks, W) {
-    var GAP = 10, EDGE = 2, INSET = 4, CLEAR = 5;
-    var sorted = marks.slice().sort(function (a, b) { return a.x - b.x || a.order - b.order; });
+  function placeLabels(marks, W, scale) {
+    var GAP = 10 * scale, EDGE = 2, INSET = 4, CLEAR = 5;
+    var sorted = marks.toSorted(function (a, b) { return a.x - b.x || a.order - b.order; });
     var groups = [];
     sorted.forEach(function (m) {
       var g = groups[groups.length - 1];
-      if (g && m.x - g.last < 16) { g.members.push(m); g.last = m.x; }
+      if (g && m.x - g.last < 16 && (g.members.length + 1) * 100 * scale < W) { g.members.push(m); g.last = m.x; }
       else groups.push({ members: [m], last: m.x });
     });
     groups.forEach(function (g) {
-      var byOrder = g.members.slice().sort(function (a, b) { return a.order - b.order; });
+      var byOrder = g.members.toSorted(function (a, b) { return a.order - b.order; });
       g.text = byOrder.map(function (m) { return m.text; }).join(", ");
       g.plan = byOrder.some(function (m) { return m.kind === "plan"; });
       g.kind = g.plan ? "plan" : (g.members.length === 1 ? g.members[0].kind : "pct");
       g.x = g.members.reduce(function (a, m) { return a + m.x; }, 0) / g.members.length;
-      g.w = g.text.length * 7.7 + (g.plan ? 16 : 2);
+      g.w = g.text.length * 7.7 * scale + (g.plan ? 16 : 2);
       g.minC = g.x - g.w / 2 + INSET; g.maxC = g.x + g.w / 2 - INSET;
       g.lane = 0;
     });
@@ -179,8 +179,9 @@
 
   /* r: a compute() result. W, H: the drawing size in CSS pixels, so type stays true to size.
      The gold bar is the bin that holds the median, the number the headline states. */
-  function histMarkup(r, W, H) {
-    var padX = 14, base = H - 48, plotW = W - padX * 2;
+  function histMarkup(r, W, H, scale) {
+    scale = scale || 1;
+    var padX = 14 * scale, base = H - 48 * scale, plotW = W - padX * 2;
     var n = r.counts.length;
     var lo = Math.min(r.min, r.naive), hi = Math.max(r.min + n * r.binWidth, r.naive);
     if (r.certain) { lo = Math.max(0, r.min - 5); hi = lo + 10; }           // one value: a ten-day window around it
@@ -202,11 +203,11 @@
         { kind: "pct", text: "P85 " + t.p85, x: X(r.p85), order: 2 },
         { kind: "pct", text: "P95 " + t.p95, x: X(r.p95), order: 3 }
       ];
-    var placed = placeLabels(marks, W);
+    var placed = placeLabels(marks, W, scale);
 
     // the plot starts under the label lanes: one or two lanes fit the usual headroom, more push it down
-    var LANE = 18, topY = placed.lanes === 1 ? 15 : 13;
-    var plotTop = Math.max(48, topY + LANE * (placed.lanes - 1) + 17), plotH = base - plotTop;
+    var LANE = 18 * scale, topY = (placed.lanes === 1 ? 15 : 13) * scale;
+    var plotTop = Math.max(48 * scale, topY + LANE * (placed.lanes - 1) + 17 * scale), plotH = base - plotTop;
     var peak = Math.max.apply(null, r.counts) || 1;
     function barHeight(k) { return r.counts[k] ? Math.max(1, plotH * r.counts[k] / peak) : 0; }
 
@@ -220,11 +221,11 @@
 
     // x axis: the baseline, whole-day ticks, the unit
     out.push('<line class="ch-base" x1="' + padX + '" y1="' + f(base) + '" x2="' + f(W - padX) + '" y2="' + f(base) + '"/>');
-    var stepDays = tickStep(span, W < 420 ? 5 : 8);
+    var stepDays = tickStep(span, W / scale < 420 ? 5 : 8);
     for (var d = Math.ceil(lo / stepDays - 1e-9) * stepDays; d <= hi + 1e-9; d += stepDays) {
       var tx = X(d);
       out.push('<line class="ch-base" x1="' + f(tx) + '" y1="' + f(base) + '" x2="' + f(tx) + '" y2="' + f(base + 5) + '"/>');
-      out.push('<text class="ch-tick" x="' + f(tx) + '" y="' + f(base + 20) + '" text-anchor="middle">' + d + "</text>");
+      out.push('<text class="ch-tick" x="' + f(tx) + '" y="' + f(base + 20 * scale) + '" text-anchor="middle">' + d + "</text>");
     }
     out.push('<text class="ch-axis" x="' + f(W / 2) + '" y="' + f(H - 6) + '" text-anchor="middle">Days to finish</text>');
 
@@ -232,7 +233,7 @@
     placed.groups.forEach(function (g) {
       var y = topY + LANE * (placed.lanes - 1 - g.lane);
       var end = g.kind === "median" ? base - barHeight(mi) - 3 : base;
-      var path = "M" + f(g.x) + " " + (y + 7) + "V" + f(Math.max(end, y + 9));
+      var path = "M" + f(g.x) + " " + (y + 7 * scale) + "V" + f(Math.max(end, y + 9 * scale));
       out.push('<path class="ch-halo" d="' + path + '"/>');
       out.push('<path class="ch-mark ch-mark--' + g.kind + '" d="' + path + '"/>');
       if (g.plan) {
@@ -254,41 +255,70 @@
     var $ = function (id) { return doc.getElementById(id); };
     function setText(el, t) { if (el && el.textContent !== t) el.textContent = t; }
 
-    /* theme toggle: stored choice, else the OS preference (the inline head script set data-theme) */
+    /* An absent override follows the OS, including changes during the visit. */
     var toggle = $("themeToggle");
+    var preference = win.matchMedia("(prefers-color-scheme: dark)");
+    var override = html.getAttribute("data-theme");
     function syncToggle() {
-      var dark = html.getAttribute("data-theme") === "dark";
-      toggle.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+      var dark = (override || (preference.matches ? "dark" : "light")) === "dark";
+      if (override) html.setAttribute("data-theme", override);
+      else html.removeAttribute("data-theme");
+      doc.querySelector('meta[name="color-scheme"]').content = override || "light dark";
+      Array.prototype.forEach.call(doc.querySelectorAll('meta[name="theme-color"]'), function (meta) {
+        meta.content = dark ? "#061325" : "#f0f6fc";
+        meta.removeAttribute("media");
+      });
+      if (toggle) toggle.setAttribute("aria-label", (dark ? "Switch to light theme" : "Switch to dark theme") + (override ? "; returns to system preference when it matches" : "; currently following system"));
     }
     if (toggle) {
       toggle.addEventListener("click", function () {
-        var next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        html.setAttribute("data-theme", next);
-        try { win.localStorage.setItem("theme", next); } catch (e) { /* private mode: the choice lasts the visit */ }
+        var current = override || (preference.matches ? "dark" : "light");
+        var next = current === "dark" ? "light" : "dark";
+        override = next === (preference.matches ? "dark" : "light") ? null : next;
+        try {
+          if (override) win.localStorage.setItem("theme", override);
+          else win.localStorage.removeItem("theme");
+        } catch (e) { /* private mode: the choice lasts the visit */ }
         syncToggle();
       });
-      syncToggle();
     }
+    preference.addEventListener("change", syncToggle);
+    win.addEventListener("storage", function (e) {
+      if (e.key !== "theme" && e.key !== null) return;
+      override = e.newValue === "light" || e.newValue === "dark" ? e.newValue : null;
+      syncToggle();
+    });
+    syncToggle();
 
     /* copy buttons: say "Copied" only when the clipboard took it.
        data-copy holds the text; data-copy-from names the element whose text is copied. */
     function legacyCopy(text) {
       var ta = doc.createElement("textarea");
-      ta.value = text; ta.setAttribute("readonly", ""); ta.className = "visually-hidden";
+      var focused = doc.activeElement;
+      ta.value = text; ta.setAttribute("readonly", ""); ta.className = "copy__field";
       doc.body.appendChild(ta); ta.select();
       var ok = false;
       try { ok = doc.execCommand("copy"); } catch (e) { ok = false; }
       doc.body.removeChild(ta);
+      if (focused) focused.focus({ preventScroll: true });
       return ok;
     }
+    var lastCopyMessage = "";
     Array.prototype.forEach.call(doc.querySelectorAll(".copy"), function (btn) {
       var lbl = btn.querySelector(".copy__label") || btn;
-      var rest = lbl.textContent, timer = null;
+      var timer = null;
+      lbl.removeAttribute("aria-live");
+      var feedback = doc.createElement("span");
+      feedback.className = "copy__status";
+      feedback.setAttribute("role", "status");
+      btn.insertAdjacentElement("afterend", feedback);
       function done(ok) {
-        if (!ok) return;
-        lbl.textContent = "Copied";
+        var message = ok ? "Copied" : "Copy failed. Select the text and copy it manually.";
+        if (message === lastCopyMessage) message += "\u00a0";
+        lastCopyMessage = message;
+        feedback.textContent = message;
         win.clearTimeout(timer);
-        timer = win.setTimeout(function () { lbl.textContent = rest; }, 1600);
+        timer = win.setTimeout(function () { feedback.textContent = ""; }, 4000);
       }
       btn.addEventListener("click", function () {
         var from = btn.getAttribute("data-copy-from"), src = from ? $(from) : null;
@@ -394,7 +424,7 @@
       var W = Math.round(box.width), H = Math.round(box.height);
       if (W < 40 || H < 40) return;
       svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-      svg.innerHTML = histMarkup(last, W, H);
+      svg.innerHTML = histMarkup(last, W, H, parseFloat(win.getComputedStyle(html).fontSize) / 16);
     }
 
     /* screen readers hear one sentence once the dragging stops, not every frame of it */
@@ -472,8 +502,8 @@
     if (win.ResizeObserver) {
       var seen = 0;
       new win.ResizeObserver(function (entries) {
-        var w = Math.round(entries[0].contentRect.width);
-        if (w !== seen) { seen = w; win.requestAnimationFrame(draw); }
+        var size = entries[0].contentRect.width + ":" + entries[0].contentRect.height;
+        if (size !== seen) { seen = size; win.requestAnimationFrame(draw); }
       }).observe(svg);
     }
     if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(draw, function () {});

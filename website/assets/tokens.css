@@ -34,7 +34,7 @@
   --radius-card: 6px; --radius-input: 6px;
 
   /* light: the identity */
-  color-scheme: light;
+  color-scheme: light dark;
   --color-paper: #f0f6fc;
   --color-paper-2: oklch(93.2% 0.02 250);
   --color-paper-3: oklch(89% 0.03 252);
@@ -54,6 +54,8 @@
   --chart-median: var(--color-accent);
   --chart-median-edge: var(--color-accent-edge);
 }
+
+:root[data-theme="light"] { color-scheme: light; }
 
 /* dark: the same system re-derived; elevation is lighter, the bars sit between canvas and ink */
 :root[data-theme="dark"] {

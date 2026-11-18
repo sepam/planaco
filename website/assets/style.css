@@ -11,8 +11,7 @@
 /* Hallmark · reworded "Questions before you install" to "Before you install" · 58: six words cut to three */
 /* Hallmark · finish-review: subagent · 14 findings · the chart caption, the P50 label and the strip state the exact median to one decimal; a plan with no spread reads "is certain." and draws one bar; every label sits straight over its line; Code is back in the nav and PyPI in the close; the criticality line says why two bars are full; the strip and caption follow geometry, not an observer; one debounced status line replaces the live tiles */
 /* Hallmark · hero-review: fix · 4 findings · gold now marks the median bin and every marker carries its value in days; the legend row is gone; the first tile is the plan and its odds; the live median sits above the chart; the jog at 375 was the elbow of a label pushed off its line, lines now leave straight from under their label */
-@import url("./tokens.css");
-@import url("./base.css");
+
 
 /* ---------- page ---------- */
 html { scroll-padding-top: var(--space-lg); }
@@ -74,7 +73,7 @@ html:not(.js) .copy { display: none; }
 
 /* the pinned readout: a tall track on the right half of the bench, the figure sticky inside it */
 .pin { position: absolute; top: 0; bottom: 0; right: var(--gutter); width: calc((100% - 2 * var(--gutter) - var(--bench-gap)) / 2); }
-.readout { position: sticky; top: calc((100dvh - var(--hero-height)) / 2); display: grid; align-content: center; row-gap: var(--space-md); height: var(--hero-height); margin: 0; }
+.readout { position: sticky; top: var(--space-lg); display: grid; align-content: center; row-gap: var(--space-md); min-height: var(--hero-height); margin: 0; container: readout / inline-size; }
 /* the live result explains the chart; the link is a way into the workbench */
 .readout__cap { display: flex; align-items: end; justify-content: space-between; gap: var(--space-md); min-height: 1.75rem; font-size: var(--text-sm); }
 .readout__result { display: grid; color: var(--color-muted); line-height: 1.35; }
@@ -82,7 +81,7 @@ html:not(.js) .copy { display: none; }
 .readout__k { color: var(--color-ink-2); }
 .readout__link { color: var(--color-ink); }
 .readout__link:hover { text-decoration-thickness: 2px; }
-.chart { width: 100%; height: auto; aspect-ratio: 560 / 368; overflow: visible; }
+.chart { width: 100%; height: auto; min-height: 20rem; aspect-ratio: 560 / 368; overflow: visible; }
 
 .ch-bar { fill: var(--chart-bar); }
 .ch-bar--median { fill: var(--chart-median); stroke: var(--chart-median-edge); stroke-width: 1.5; }
@@ -110,14 +109,14 @@ html:not(.js) .copy { display: none; }
 .strip { display: none; }
 
 /* the panels that scroll past the chart */
-.panel { width: var(--bench-col); padding-top: var(--space-3xl); }
+.panel { width: var(--bench-col); padding-top: var(--space-3xl); container: panel / inline-size; }
 .hero ~ .panel:first-of-type { padding-top: var(--space-2xl); }
 .panel h2 { font-variant-numeric: tabular-nums; }
 .panel .lead { margin-top: var(--space-md); max-width: 34ch; }
 
 /* the plan as its dependency graph: Design, then Frontend and Backend side by side, then Testing */
 .dag { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gap-columns); margin-top: var(--space-xl); }
-.task { min-width: 0; padding: var(--space-md) var(--space-md) var(--space-xs); border-radius: var(--radius-card); background: var(--color-paper-2); }
+.task { min-width: 0; padding: var(--space-md) var(--space-md) var(--space-xs); border-radius: var(--radius-card); background: var(--color-paper-2); container: task / inline-size; }
 .task--design, .task--testing { grid-column: 1 / -1; justify-self: center; width: calc(50% - var(--gap-columns) / 2); }
 .task h3 { font-size: var(--text-lg); line-height: 1.2; letter-spacing: -0.01em; }
 .task__meta { min-height: 2.7em; margin-top: var(--space-2xs); color: var(--color-muted); font-size: var(--text-xs); line-height: 1.35; }
@@ -135,6 +134,25 @@ html:not(.js) .copy { display: none; }
 .row input[type="range"]:disabled { opacity: 0.55; cursor: not-allowed; }
 .row input[type="range"]:disabled::-webkit-slider-thumb { transform: none; }
 .row input[type="range"]:disabled::-moz-range-thumb { transform: none; }
+@container task (max-width: 17rem) {
+  .row { grid-template-columns: minmax(0, 1fr) auto; padding-top: var(--space-xs); }
+  .row input[type="range"] { grid-column: 1 / -1; grid-row: 2; }
+}
+@container readout (max-width: 30rem) {
+  .tiles { grid-template-columns: minmax(0, 1fr); padding-top: 0; }
+  .tile, .tile:first-child, .tile:last-child { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-xs); padding: var(--space-xs) 0; border-left: 0; border-bottom: 1px solid var(--color-rule); }
+  .tile dd { text-align: right; }
+  .tile__fig { margin-top: 0; }
+}
+.copy__status { flex-basis: 100%; color: var(--color-ink-2); font-size: var(--text-sm); }
+.copy__status:empty { position: absolute; }
+.copy__field { position: fixed; inset-block-start: 0; opacity: 0; }
+@media (forced-colors: active) {
+  .row input[type="range"] { appearance: auto; }
+  .row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: auto; appearance: auto; }
+  .crit__track { border: 1px solid CanvasText; }
+  .crit__bar { background: Highlight; forced-color-adjust: none; }
+}
 .dag__link { position: relative; grid-column: 1 / -1; height: var(--space-lg); color: var(--color-rule-strong); }
 .dag__link::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 50%; border-left: 2px solid currentColor; transform: translateX(-1px); }
 .dag__link::after { content: ""; position: absolute; left: calc(25% - var(--gap-columns) / 4); right: calc(25% - var(--gap-columns) / 4); top: calc(50% - 1px); bottom: 0; border: 2px solid currentColor; border-bottom: 0; }
@@ -235,7 +253,7 @@ pre.prose { white-space: pre-wrap; overflow-wrap: break-word; }
 @media (max-width: 60rem) {
   .hero { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-xl); min-height: 0; padding-block: var(--space-xl) 0; }
   .pin { position: static; width: auto; }
-  .readout { position: static; height: auto; }
+  .readout { position: static; height: auto; min-height: 0; }
   .panel { width: auto; padding-top: var(--space-2xl); }
   .nav__link { padding-inline: var(--space-xs); }
   .head--split h2, .head--split .lead { grid-column: 1 / -1; }
@@ -250,7 +268,7 @@ pre.prose { white-space: pre-wrap; overflow-wrap: break-word; }
 @media (max-width: 60rem), (max-height: 620px) {
   html { scroll-padding-top: var(--space-3xl); }
   /* it takes no room of its own (it lies over the first panel's top padding) and shows once the tiles have scrolled off */
-  .strip { position: sticky; top: 0; z-index: var(--z-sticky); display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); height: var(--space-2xl); margin: 0 calc(-1 * var(--gutter)) calc(-1 * var(--space-2xl)); padding: 0 var(--gutter); border-bottom: 1px solid var(--color-rule); background: var(--color-paper); visibility: hidden; }
+  .strip { position: sticky; top: 0; z-index: var(--z-sticky); display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: var(--space-sm); min-height: var(--space-2xl); margin: 0 calc(-1 * var(--gutter)) calc(-1 * var(--space-2xl)); padding: var(--space-xs) var(--gutter); border-bottom: 1px solid var(--color-rule); background: var(--color-paper); visibility: hidden; }
   .strip.is-on { visibility: visible; }
   .strip__cell { display: grid; }
   .strip__k { font-size: var(--text-xs); color: var(--color-muted); white-space: nowrap; }
@@ -308,3 +326,18 @@ pre.prose { white-space: pre-wrap; overflow-wrap: break-word; }
   .row input[type="range"]:active::-webkit-slider-thumb { transform: none; }
   .row input[type="range"]:active::-moz-range-thumb { transform: none; }
 }
+
+@container panel (max-width: 22rem) {
+  .dag { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-sm); }
+  .task--design, .task--testing { width: 100%; }
+  .dag__link { display: none; }
+  .odds { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-sm); }
+}
+@container readout (max-width: 30rem) {
+  .tile dd { display: block; }
+  .tile__fig { grid-column: auto; grid-row: auto; }
+  .tile__tag { grid-column: auto; grid-row: auto; }
+  .readout__cap { flex-wrap: wrap; }
+}
+.nav__inner, .nav__links { flex-wrap: wrap; }
+.dists__fields code { overflow-wrap: anywhere; }

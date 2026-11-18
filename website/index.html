@@ -38,21 +38,22 @@
   "sameAs": ["https://github.com/sepam/planaco", "https://pypi.org/project/planaco/"]
 }
 </script>
+<meta name="color-scheme" content="light dark" />
 <script>
   (function () {
     var t;
     try { t = localStorage.getItem("theme"); } catch (e) {}
-    if (t !== "light" && t !== "dark") {
-      t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    if (t === "light" || t === "dark") {
+      document.documentElement.setAttribute("data-theme", t);
+      document.querySelector('meta[name="color-scheme"]').content = t;
     }
-    document.documentElement.setAttribute("data-theme", t);
     document.documentElement.classList.add("js");
   })();
 </script>
 <meta name="theme-color" content="#061325" media="(prefers-color-scheme: dark)" />
 <meta name="theme-color" content="#f0f6fc" media="(prefers-color-scheme: light)" />
-<link rel="preload" href="assets/tokens.css" as="style" />
-<link rel="preload" href="assets/base.css" as="style" />
+<link rel="stylesheet" href="assets/tokens.css" />
+<link rel="stylesheet" href="assets/base.css" />
 <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
@@ -393,7 +394,7 @@ Put seed: 42 under project so the run reproduces. Run &quot;planaco stats projec
       <h2 id="dist-title">Pick the shape that fits the uncertainty</h2>
       <p class="lead">Six distributions, set per task.</p>
     </div>
-    <table class="dists" id="dists">
+    <table class="dists" id="dists" aria-labelledby="dist-title">
       <thead>
         <tr><th scope="col">Distribution</th><th scope="col"><span class="visually-hidden">Shape</span></th><th scope="col">Use it for</th><th scope="col">YAML fields</th></tr>
       </thead>
